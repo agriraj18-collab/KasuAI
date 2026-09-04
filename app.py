@@ -356,24 +356,30 @@ def parse_sms_with_brain(sms_txt, api_key=""):
 def extract_amount_regex(text):
     if not text:
         return 0.0
-    match = re.search(r"(?:rs\.?|inr|\u20b9)\s*([0-9]+(?:,[0-9]+)*(?:\.[0-9]+)?)", text, re.IGNORECASE)
-    if match:
-        raw_val = match.group(1).replace(",", "").strip()
+    # 1. Split out balance suffix so we never accidentally grab available balance
+    parts = re.split(r'(?:avl|avail|tot|net|rem)?\.?\s*bal(?:ance)?[:\s]', text, flags=re.IGNORECASE)
+    txn_part = parts[0] if parts else text
+    
+    # 2. Priority: look for amount near debit/spent/paid/withdrawn
+    m_action = re.search(r'(?:debited|spent|paid|withdrawn|transferred)\s+(?:by|for|with|of)?\s*(?:rs\.?|inr|\u20b9)?\s*([0-9]+(?:,[0-9]+)*(?:\.[0-9]+)?)', txn_part, re.IGNORECASE)
+    if m_action:
         try:
-            val = float(raw_val)
+            val = float(m_action.group(1).replace(',', '').strip())
             if val > 0:
                 return val
         except ValueError:
             pass
-    fallback = re.search(r"(?:debit(?:ed)?|paid|spent|withdrawn)\s+(?:for|by|with)?\s*(?:rs\.?|inr|\u20b9)?\s*([0-9]+(?:,[0-9]+)*(?:\.[0-9]+)?)", text, re.IGNORECASE)
-    if fallback:
-        raw_val = fallback.group(1).replace(",", "").strip()
+        
+    # 3. Look for currency symbol in txn_part
+    m_curr = re.search(r'(?:rs\.?|inr|\u20b9)\s*([0-9]+(?:,[0-9]+)*(?:\.[0-9]+)?)', txn_part, re.IGNORECASE)
+    if m_curr:
         try:
-            val = float(raw_val)
+            val = float(m_curr.group(1).replace(',', '').strip())
             if val > 0:
                 return val
         except ValueError:
             pass
+            
     return 0.0
 
 def extract_merchant_regex(text, default="இதர"):

@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="20dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="👤 இந்த மொபைலின் பயனர் யார்?"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:textColor="#0f172a" />
+
+    <RadioGroup
+        android:id="@+id/radioGroupUser"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_marginTop="8dp">
+
+        <RadioButton
+            android:id="@+id/radioHusband"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="👤 ராஜ்குமார் (கணவர்)"
+            android:checked="true" />
+
+        <RadioButton
+            android:id="@+id/radioWife"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="👩 மனைவி (வீட்டுச் செலவு)" />
+    </RadioGroup>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="🌐 KasuAI சர்வர் முகவரி (URL):"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:textColor="#0f172a"
+        android:layout_marginTop="16dp" />
+
+    <EditText
+        android:id="@+id/editServerUrl"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="http://192.168.1.5:8501 அல்லது Cloud URL"
+        android:inputType="textUri"
+        android:textSize="14sp"
+        android:layout_marginTop="4dp" />
+
+</LinearLayout>
