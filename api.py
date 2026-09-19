@@ -3,7 +3,7 @@ import json
 import sqlite3
 from datetime import datetime
 from flask import Flask, request, jsonify
-from app import parse_sms_with_brain, get_db
+from app import parse_sms_with_brain, db_insert_expense, db_insert_alert
 
 app = Flask(__name__)
 
@@ -12,21 +12,12 @@ def health_check():
     return jsonify({
         "status": "online",
         "service": "KasuAI Sync API",
+        "database": "Supabase Cloud + Local Backup",
         "time": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     })
 
 @app.route("/api/sms", methods=["POST"])
 def receive_sms():
-    """
-    Receives incoming SMS payload from the KasuAI Android App:
-    Payload format:
-    {
-        "sender": "VM-SBIINB",
-        "message": "Dear UPI user A/C 1234 debited by 250.0 on 04Sep26...",
-        "user": "👤 ராஜ்குமார் (கணவர்)",  # or "👩 மனைவி (வீட்டுச் செலவு)"
-        "timestamp": "2026-09-04 18:50:00"
-    }
-    """
     try:
         data = request.get_json(force=True)
         if not data:
@@ -43,14 +34,10 @@ def receive_sms():
         gemini_api_key = os.getenv("GEMINI_API_KEY", "")
         result = parse_sms_with_brain(sms_text, gemini_api_key)
         
-        conn = get_db()
         if result and result["is_expense"] and result["amount"] > 0:
-            conn.execute(
-                "INSERT INTO expenses (date, user, category, amount, mode, merchant, notes) VALUES (?, ?, ?, ?, ?, ?, ?)",
-                (dt, user, result["category"], result["amount"], "Mobile SMS", result["merchant"], sms_text)
+            db_insert_expense(
+                dt, user, result["category"], result["amount"], "Mobile SMS", result["merchant"], sms_text
             )
-            conn.commit()
-            conn.close()
             return jsonify({
                 "status": "success",
                 "type": "expense",
@@ -63,12 +50,7 @@ def receive_sms():
         else:
             cat = result["category"] if result else "இதர அறிவிப்பு"
             explanation = result["explanation"] if result else "தகவல் அறிவிப்பு செய்தி"
-            conn.execute(
-                "INSERT INTO other_alerts (date, sender, category, explanation, raw_text) VALUES (?, ?, ?, ?, ?)",
-                (dt, sender, cat, explanation, sms_text)
-            )
-            conn.commit()
-            conn.close()
+            db_insert_alert(dt, sender, cat, explanation, sms_text)
             return jsonify({
                 "status": "success",
                 "type": "alert",

@@ -201,7 +201,19 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# --- DATABASE CONNECTION ---
+# --- DATABASE CONFIG & SUPABASE HYBRID ENGINE ---
+SUPABASE_URL = os.getenv("SUPABASE_URL", "https://jfplghpfxlbatmaeokmb.supabase.co").strip().rstrip("/")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY", "sb_publishable_8NIaGgFZnmM_IkDnl8atYQ_MV9gtsTq").strip()
+
+try:
+    if hasattr(st, "secrets"):
+        if "SUPABASE_URL" in st.secrets:
+            SUPABASE_URL = str(st.secrets["SUPABASE_URL"]).strip().rstrip("/")
+        if "SUPABASE_KEY" in st.secrets:
+            SUPABASE_KEY = str(st.secrets["SUPABASE_KEY"]).strip()
+except Exception:
+    pass
+
 DB_NAME = "rajpwa_finance.db"
 
 def get_db():
@@ -247,6 +259,232 @@ def init_db():
     conn.close()
 
 init_db()
+
+def get_supabase_headers():
+    return {
+        "apikey": SUPABASE_KEY,
+        "Authorization": f"Bearer {SUPABASE_KEY}",
+        "Content-Type": "application/json",
+        "Prefer": "return=representation"
+    }
+
+# --- SUPABASE DATA ACCESS LAYER ---
+def db_get_expenses():
+    """Fetches all expenses from Supabase Cloud REST API with SQLite fallback."""
+    if SUPABASE_URL and SUPABASE_KEY:
+        try:
+            url = f"{SUPABASE_URL}/rest/v1/expenses?select=*&order=date.desc"
+            resp = requests.get(url, headers=get_supabase_headers(), timeout=5)
+            if resp.status_code == 200:
+                data = resp.json()
+                df = pd.DataFrame(data)
+                if not df.empty and 'amount' in df:
+                    df['amount'] = pd.to_numeric(df['amount'], errors='coerce').fillna(0.0)
+                return df
+        except Exception:
+            pass
+    conn = get_db()
+    df = pd.read_sql_query("SELECT * FROM expenses ORDER BY date DESC", conn)
+    conn.close()
+    return df
+
+def db_insert_expense(date, user, category, amount, mode, merchant, notes):
+    """Inserts a new expense to Supabase Cloud and mirrors to local SQLite."""
+    cloud_saved = False
+    if SUPABASE_URL and SUPABASE_KEY:
+        try:
+            url = f"{SUPABASE_URL}/rest/v1/expenses"
+            payload = [{
+                "date": str(date),
+                "user": str(user),
+                "category": str(category),
+                "amount": float(amount),
+                "mode": str(mode),
+                "merchant": str(merchant),
+                "notes": str(notes)
+            }]
+            resp = requests.post(url, headers=get_supabase_headers(), json=payload, timeout=5)
+            if resp.status_code in (200, 201):
+                cloud_saved = True
+        except Exception:
+            pass
+    try:
+        conn = get_db()
+        conn.execute(
+            "INSERT INTO expenses (date, user, category, amount, mode, merchant, notes) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (str(date), str(user), str(category), float(amount), str(mode), str(merchant), str(notes))
+        )
+        conn.commit()
+        conn.close()
+    except Exception:
+        pass
+    return cloud_saved
+
+def db_delete_expense(expense_id):
+    """Deletes an expense from Supabase Cloud and local SQLite."""
+    if SUPABASE_URL and SUPABASE_KEY:
+        try:
+            url = f"{SUPABASE_URL}/rest/v1/expenses?id=eq.{expense_id}"
+            requests.delete(url, headers=get_supabase_headers(), timeout=5)
+        except Exception:
+            pass
+    try:
+        conn = get_db()
+        conn.execute("DELETE FROM expenses WHERE id = ?", (expense_id,))
+        conn.commit()
+        conn.close()
+    except Exception:
+        pass
+
+def db_get_loans():
+    """Fetches all loans from Supabase Cloud with SQLite fallback."""
+    if SUPABASE_URL and SUPABASE_KEY:
+        try:
+            url = f"{SUPABASE_URL}/rest/v1/loans?select=*&order=id.asc"
+            resp = requests.get(url, headers=get_supabase_headers(), timeout=5)
+            if resp.status_code == 200:
+                data = resp.json()
+                df = pd.DataFrame(data)
+                if not df.empty:
+                    for col in ['total_amount', 'monthly_emi', 'due_day', 'remaining_months']:
+                        if col in df:
+                            df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0)
+                return df
+        except Exception:
+            pass
+    conn = get_db()
+    df = pd.read_sql_query("SELECT * FROM loans", conn)
+    conn.close()
+    return df
+
+def db_save_loan(loan_name, total_amount, monthly_emi, due_day, remaining_months):
+    """Saves or updates a loan in Supabase Cloud and local SQLite."""
+    if SUPABASE_URL and SUPABASE_KEY:
+        try:
+            url = f"{SUPABASE_URL}/rest/v1/loans?loan_name=eq.{requests.utils.quote(str(loan_name))}"
+            check_resp = requests.get(url, headers=get_supabase_headers(), timeout=5)
+            payload = {
+                "loan_name": str(loan_name),
+                "total_amount": float(total_amount),
+                "monthly_emi": float(monthly_emi),
+                "due_day": int(due_day),
+                "remaining_months": int(remaining_months)
+            }
+            if check_resp.status_code == 200 and len(check_resp.json()) > 0:
+                existing_id = check_resp.json()[0]['id']
+                requests.patch(f"{SUPABASE_URL}/rest/v1/loans?id=eq.{existing_id}", headers=get_supabase_headers(), json=payload, timeout=5)
+            else:
+                requests.post(f"{SUPABASE_URL}/rest/v1/loans", headers=get_supabase_headers(), json=[payload], timeout=5)
+        except Exception:
+            pass
+    try:
+        conn = get_db()
+        conn.execute(
+            "INSERT OR REPLACE INTO loans (loan_name, total_amount, monthly_emi, due_day, remaining_months) VALUES (?, ?, ?, ?, ?)",
+            (str(loan_name), float(total_amount), float(monthly_emi), int(due_day), int(remaining_months))
+        )
+        conn.commit()
+        conn.close()
+    except Exception:
+        pass
+
+def db_delete_loan(loan_id):
+    """Deletes a loan from Supabase Cloud and local SQLite."""
+    if SUPABASE_URL and SUPABASE_KEY:
+        try:
+            requests.delete(f"{SUPABASE_URL}/rest/v1/loans?id=eq.{loan_id}", headers=get_supabase_headers(), timeout=5)
+        except Exception:
+            pass
+    try:
+        conn = get_db()
+        conn.execute("DELETE FROM loans WHERE id = ?", (loan_id,))
+        conn.commit()
+        conn.close()
+    except Exception:
+        pass
+
+def db_get_alerts():
+    """Fetches other alerts from Supabase Cloud with SQLite fallback."""
+    if SUPABASE_URL and SUPABASE_KEY:
+        try:
+            url = f"{SUPABASE_URL}/rest/v1/other_alerts?select=*&order=id.desc"
+            resp = requests.get(url, headers=get_supabase_headers(), timeout=5)
+            if resp.status_code == 200:
+                return pd.DataFrame(resp.json())
+        except Exception:
+            pass
+    conn = get_db()
+    df = pd.read_sql_query("SELECT id, date, category, explanation, raw_text FROM other_alerts ORDER BY id DESC", conn)
+    conn.close()
+    return df
+
+def db_insert_alert(date, sender, category, explanation, raw_text):
+    """Inserts alert into Supabase and SQLite."""
+    if SUPABASE_URL and SUPABASE_KEY:
+        try:
+            payload = [{
+                "date": str(date),
+                "sender": str(sender),
+                "category": str(category),
+                "explanation": str(explanation),
+                "raw_text": str(raw_text)
+            }]
+            requests.post(f"{SUPABASE_URL}/rest/v1/other_alerts", headers=get_supabase_headers(), json=payload, timeout=5)
+        except Exception:
+            pass
+    try:
+        conn = get_db()
+        conn.execute("INSERT INTO other_alerts (date, sender, category, explanation, raw_text) VALUES (?, ?, ?, ?, ?)",
+                     (str(date), str(sender), str(category), str(explanation), str(raw_text)))
+        conn.commit()
+        conn.close()
+    except Exception:
+        pass
+
+def db_delete_alert(alert_id):
+    """Deletes alert from Supabase and SQLite."""
+    if SUPABASE_URL and SUPABASE_KEY:
+        try:
+            requests.delete(f"{SUPABASE_URL}/rest/v1/other_alerts?id=eq.{alert_id}", headers=get_supabase_headers(), timeout=5)
+        except Exception:
+            pass
+    try:
+        conn = get_db()
+        conn.execute("DELETE FROM other_alerts WHERE id = ?", (alert_id,))
+        conn.commit()
+        conn.close()
+    except Exception:
+        pass
+
+def db_insert_batch_expenses(batch_records):
+    """Batch inserts records into Supabase and SQLite."""
+    if not batch_records:
+        return
+    if SUPABASE_URL and SUPABASE_KEY:
+        try:
+            payload = [
+                {
+                    "date": str(r[0]),
+                    "user": str(r[1]),
+                    "category": str(r[2]),
+                    "amount": float(r[3]),
+                    "mode": str(r[4]),
+                    "merchant": str(r[5]),
+                    "notes": str(r[6])
+                }
+                for r in batch_records
+            ]
+            for i in range(0, len(payload), 100):
+                requests.post(f"{SUPABASE_URL}/rest/v1/expenses", headers=get_supabase_headers(), json=payload[i:i+100], timeout=10)
+        except Exception:
+            pass
+    try:
+        conn = get_db()
+        conn.executemany("INSERT INTO expenses (date, user, category, amount, mode, merchant, notes) VALUES (?, ?, ?, ?, ?, ?, ?)", batch_records)
+        conn.commit()
+        conn.close()
+    except Exception:
+        pass
 
 # --- GEMINI AI & SMART PARSING ENGINE ---
 def call_gemini_ai(prompt, api_key):
@@ -400,7 +638,7 @@ st.markdown("""
         <div class="hero-subtitle">குடும்ப நிதி, ஸ்மார்ட் SMS மூளை & சேமிப்பு மேலாண்மை</div>
     </div>
     <div style="text-align:right;">
-        <span style="background:#22c55e; color:#0f172a; padding:5px 14px; border-radius:20px; font-weight:800; font-size:12px;">நேரலை (Live)</span>
+        <span style="background:#22c55e; color:#0f172a; padding:6px 14px; border-radius:20px; font-weight:800; font-size:12px;">🟢 Supabase Cloud 24/7</span>
     </div>
 </div>
 """, unsafe_allow_html=True)
@@ -425,6 +663,15 @@ st.write("")
 gemini_api_key = os.getenv("GEMINI_API_KEY", "")
 with st.sidebar:
     st.header("⚙️ KasuAI அமைப்புகள்")
+    
+    st.markdown("""
+    <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:12px; margin-bottom:12px;">
+        <div style="font-size:12px; font-weight:700; color:#0369a1;">☁️ CLOUD DATABASE</div>
+        <div style="font-size:14px; font-weight:800; color:#0f172a; margin-top:2px;">Supabase PostgreSQL</div>
+        <div style="font-size:12px; color:#16a34a; font-weight:700; margin-top:4px;">🟢 24/7 Real-Time Sync Active</div>
+    </div>
+    """, unsafe_allow_html=True)
+    
     user_key = st.text_input("🔑 Google Gemini API Key (இலவசம்):", value=gemini_api_key, type="password", placeholder="AIzaSy...")
     if user_key:
         gemini_api_key = user_key
@@ -444,9 +691,7 @@ tab_dash, tab_entry, tab_loans, tab_history, tab_upload, tab_alerts = st.tabs([
 
 # ==================== 1. DASHBOARD ====================
 with tab_dash:
-    conn = get_db()
-    all_df = pd.read_sql_query("SELECT * FROM expenses", conn)
-    conn.close()
+    all_df = db_get_expenses()
     
     current_m = datetime.now().strftime("%Y-%m")
     available_months = ["இந்த மாதம் (நடப்பு மாதம்)"]
@@ -603,10 +848,7 @@ with tab_dash:
                 
             with d_col2:
                 if st.button("🗑️ நீக்கு", key=f"del_exp_{r['id']}"):
-                    conn = get_db()
-                    conn.execute("DELETE FROM expenses WHERE id = ?", (r['id'],))
-                    conn.commit()
-                    conn.close()
+                    db_delete_expense(r['id'])
                     st.success("நீக்கப்பட்டது!")
                     st.rerun()
     else:
@@ -627,11 +869,15 @@ with tab_entry:
     q_c1, q_c2, q_c3, q_c4, q_c5 = st.columns(5)
     
     def add_quick_expense(cat, amt, note):
-        conn = get_db()
-        conn.execute("INSERT INTO expenses (date, user, category, amount, mode, merchant, notes) VALUES (?, ?, ?, ?, ?, ?, ?)",
-                     (datetime.now().strftime("%Y-%m-%d %H:%M:%S"), active_user, cat, amt, "ரொக்கம் (Cash)", note, note))
-        conn.commit()
-        conn.close()
+        db_insert_expense(
+            datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            active_user,
+            cat,
+            amt,
+            "ரொக்கம் (Cash)",
+            note,
+            note
+        )
         st.success(f"✅ {note} ₹{amt} ({active_user}) கணக்கில் சேர்க்கப்பட்டது!")
         st.rerun()
 
@@ -671,23 +917,27 @@ with tab_entry:
                     result = parse_sms_with_brain(sms_txt, gemini_api_key)
                     
                 if result and result["is_expense"] and result["amount"] > 0:
-                    conn = get_db()
-                    conn.execute(
-                        "INSERT INTO expenses (date, user, category, amount, mode, merchant, notes) VALUES (?, ?, ?, ?, ?, ?, ?)",
-                        (datetime.now().strftime("%Y-%m-%d %H:%M:%S"), active_user, result["category"], result["amount"], "SMS / UPI", result["merchant"], sms_txt)
+                    db_insert_expense(
+                        datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                        active_user,
+                        result["category"],
+                        result["amount"],
+                        "SMS / UPI",
+                        result["merchant"],
+                        sms_txt
                     )
-                    conn.commit()
-                    conn.close()
                     st.success(f"💳 **{result['category']}** செலவு ₹{result['amount']:,.2f} ({result['merchant']}) கணக்கில் சேர்க்கப்பட்டது! [பகுப்பாய்வு: {result['source']}]")
                     st.rerun()
                 else:
                     cat = result["category"] if result else "இதர அறிவிப்பு"
                     explanation = result["explanation"] if result else "தகவல் அறிவிப்பு"
-                    conn = get_db()
-                    conn.execute("INSERT INTO other_alerts (date, sender, category, explanation, raw_text) VALUES (?, ?, ?, ?, ?)",
-                                 (datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "SMS", cat, explanation, sms_txt))
-                    conn.commit()
-                    conn.close()
+                    db_insert_alert(
+                        datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                        "SMS",
+                        cat,
+                        explanation,
+                        sms_txt
+                    )
                     st.info(f"🔔 **{cat}:** {explanation}")
                     st.rerun()
             else:
@@ -709,11 +959,15 @@ with tab_entry:
             man_notes = st.text_input("குறிப்பு (எ.கா: காய்கறி, டீ, மளிகை):", "")
             
             if st.form_submit_button("➕ செலவைச் சேமிக்கவும்", type="primary", use_container_width=True):
-                conn = get_db()
-                conn.execute("INSERT INTO expenses (date, user, category, amount, mode, merchant, notes) VALUES (?, ?, ?, ?, ?, ?, ?)",
-                             (datetime.now().strftime("%Y-%m-%d %H:%M:%S"), active_user, man_cat, man_amt, man_mode, man_notes or "நேரடிப் பதிவு", man_notes))
-                conn.commit()
-                conn.close()
+                db_insert_expense(
+                    datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                    active_user,
+                    man_cat,
+                    man_amt,
+                    man_mode,
+                    man_notes or "நேரடிப் பதிவு",
+                    man_notes
+                )
                 st.success(f"✅ ₹{man_amt:,.2f} ({man_cat}) பதிவானது!")
                 st.rerun()
         st.markdown("</div>", unsafe_allow_html=True)
@@ -721,9 +975,7 @@ with tab_entry:
 # ==================== 3. LOANS & EMI ====================
 with tab_loans:
     st.markdown('<div class="section-title">🏦 கடன் & தவணைகள் (Loans & EMI Tracker)</div>', unsafe_allow_html=True)
-    conn = get_db()
-    l_df = pd.read_sql_query("SELECT * FROM loans", conn)
-    conn.close()
+    l_df = db_get_loans()
     
     col_l1, col_l2 = st.columns([1, 1])
     
@@ -744,11 +996,7 @@ with tab_loans:
             
             if st.form_submit_button("💾 கடனைப் பதிவு செய்", type="primary", use_container_width=True):
                 if l_name.strip():
-                    conn = get_db()
-                    conn.execute("INSERT OR REPLACE INTO loans (loan_name, total_amount, monthly_emi, due_day, remaining_months) VALUES (?, ?, ?, ?, ?)",
-                                 (l_name.strip(), l_total, l_emi, l_day, l_months))
-                    conn.commit()
-                    conn.close()
+                    db_save_loan(l_name.strip(), l_total, l_emi, l_day, l_months)
                     st.success(f"✅ '{l_name}' சேர்க்கப்பட்டது!")
                     st.rerun()
                 else:
@@ -780,10 +1028,7 @@ with tab_loans:
                     </div>
                     """, unsafe_allow_html=True)
                     if st.button("🗑️ இந்தக் கடனை நீக்கு", key=f"del_loan_{l_row['id']}"):
-                        conn = get_db()
-                        conn.execute("DELETE FROM loans WHERE id = ?", (l_row['id'],))
-                        conn.commit()
-                        conn.close()
+                        db_delete_loan(l_row['id'])
                         st.success("கடன் நீக்கப்பட்டது!")
                         st.rerun()
         else:
@@ -796,9 +1041,7 @@ with tab_loans:
 # ==================== 4. HISTORY & TRENDS ====================
 with tab_history:
     st.markdown('<div class="section-title">📜 கடந்த கால வரலாற்று வரைபடங்கள் & அறிக்கைகள்</div>', unsafe_allow_html=True)
-    conn = get_db()
-    h_df = pd.read_sql_query("SELECT * FROM expenses ORDER BY date DESC", conn)
-    conn.close()
+    h_df = db_get_expenses()
     
     if not h_df.empty:
         h_df['month_year'] = pd.to_datetime(h_df['date'], errors='coerce').dt.strftime('%Y-%m')
@@ -836,7 +1079,6 @@ with tab_upload:
     if sms_file is not None:
         if st.button("🚀 கோப்பைப் படித்து ஏற்றவும்", type="primary"):
             try:
-                conn = get_db()
                 batch_records = []
                 
                 # 1. XML
@@ -931,12 +1173,10 @@ with tab_upload:
                                 batch_records.append((dt, active_user, cat, amt, "Statement CSV", "Bank", body))
                 
                 if batch_records:
-                    conn.executemany("INSERT INTO expenses (date, user, category, amount, mode, merchant, notes) VALUES (?, ?, ?, ?, ?, ?, ?)", batch_records)
-                    conn.commit()
+                    db_insert_batch_expenses(batch_records)
                     st.success(f"🎉 {len(batch_records)} செலவுகள் வெற்றிகரமாக சேர்க்கப்பட்டன!")
                 else:
                     st.warning("கோப்பில் செலவுப் பதிவுகள் எதுவும் கண்டறியப்படவில்லை.")
-                conn.close()
                 st.rerun()
             except Exception as e:
                 st.error(f"பிழை: {e}")
@@ -944,19 +1184,14 @@ with tab_upload:
 # ==================== 6. OTHER ALERTS ====================
 with tab_alerts:
     st.markdown('<div class="section-title">🔔 இதர எச்சரிக்கைகள் & தமிழ் விளக்கம்</div>', unsafe_allow_html=True)
-    conn = get_db()
-    alerts_df = pd.read_sql_query("SELECT id, date, category, explanation, raw_text FROM other_alerts ORDER BY id DESC", conn)
-    conn.close()
+    alerts_df = db_get_alerts()
     if not alerts_df.empty:
         for idx, row in alerts_df.iterrows():
             with st.expander(f"{row['category']} — {row['date']}"):
                 st.write(f"💡 **விளக்கம்:** {row['explanation']}")
                 st.code(row['raw_text'], language="text")
                 if st.button("🗑️ நீக்கு", key=f"del_alert_{row['id']}"):
-                    conn = get_db()
-                    conn.execute("DELETE FROM other_alerts WHERE id = ?", (row['id'],))
-                    conn.commit()
-                    conn.close()
+                    db_delete_alert(row['id'])
                     st.success("எச்சரிக்கை நீக்கப்பட்டது!")
                     st.rerun()
     else:

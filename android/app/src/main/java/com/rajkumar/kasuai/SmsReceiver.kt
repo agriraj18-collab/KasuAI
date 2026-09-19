@@ -60,8 +60,21 @@ class SmsReceiver : BroadcastReceiver() {
 
                 WorkManager.getInstance(context).enqueue(syncRequest)
 
-                // Show local status bar notification
-                showNotification(context, "🪙 KasuAI தானியங்கிப் பதிவு", "வங்கி SMS பெறப்பட்டு கணக்கில் சேர்க்கப்படுகிறது...")
+                // Show local status bar notification with parsed details
+                val parsed = SmsParser.parse(fullBody)
+                if (parsed.isExpense && parsed.amount > 0) {
+                    showNotification(
+                        context,
+                        "🪙 KasuAI: ₹${parsed.amount.toInt()} (${parsed.merchant})",
+                        "${parsed.category} செலவு கிளவுட் கணக்கில் சேர்க்கப்படுகிறது..."
+                    )
+                } else {
+                    showNotification(
+                        context,
+                        "🔔 KasuAI: $sender",
+                        "வங்கி அறிவிப்பு செய்தி கிளவுடில் பதியப்படுகிறது..."
+                    )
+                }
             }
         }
     }

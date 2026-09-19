@@ -94,13 +94,13 @@ class MainActivity : AppCompatActivity() {
 
     private fun loadDashboard() {
         val prefs = getSharedPreferences("kasuai_prefs", Context.MODE_PRIVATE)
-        val serverUrl = prefs.getString("server_url", "http://10.0.2.2:8501") ?: "http://10.0.2.2:8501"
+        val serverUrl = prefs.getString("server_url", "https://kasuai-app.streamlit.app") ?: "https://kasuai-app.streamlit.app"
         webView.loadUrl(serverUrl)
     }
 
     private fun showProfileSettingsDialog() {
         val prefs = getSharedPreferences("kasuai_prefs", Context.MODE_PRIVATE)
-        val currentUrl = prefs.getString("server_url", "http://10.0.2.2:8501") ?: "http://10.0.2.2:8501"
+        val currentUrl = prefs.getString("server_url", "https://kasuai-app.streamlit.app") ?: "https://kasuai-app.streamlit.app"
         val currentUser = prefs.getString("active_user", "👤 ராஜ்குமார் (கணவர்)") ?: "👤 ராஜ்குமார் (கணவர்)"
 
         val dialogView = layoutInflater.inflate(R.layout.dialog_settings, null)
