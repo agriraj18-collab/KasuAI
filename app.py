@@ -11,192 +11,319 @@ from datetime import datetime
 
 # --- PAGE CONFIG ---
 st.set_page_config(
-    page_title="KasuAI — குடும்ப நிதி & AI மேலாண்மை",
+    page_title="KasuAI — குடும்ப நிதி",
     page_icon="🪙",
-    layout="wide",
+    layout="centered",
     initial_sidebar_state="collapsed"
 )
 
-# --- SIMPLE, BOLD & CLEAR MODERN CSS STYLING ---
+# --- ULTRA MODERN MOBILE-FIRST FINTECH STYLING ---
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
     
+    /* 1. COMPLETELY HIDE ALL STREAMLIT CHROME, HEADERS, FOOTERS & BUTTONS */
+    #MainMenu, header, footer, 
+    [data-testid="stToolbar"], 
+    [data-testid="stDecoration"], 
+    [data-testid="stStatusWidget"],
+    .stDeployButton,
+    #manage-app-button,
+    div[data-testid="stToolbar"],
+    div[data-testid="stDecoration"],
+    div[data-testid="stStatusWidget"],
+    .viewerBadge_container__1QSob,
+    button[title="View app in Streamlit Community Cloud"],
+    .css-15zrgzn, .css-vk3wp9 {
+        visibility: hidden !important;
+        display: none !important;
+        height: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    
+    /* 2. MOBILE APP CONTAINER - Centered, Edge-to-Edge Touch Friendly */
     .block-container {
-        max-width: 1040px !important;
-        padding-top: 1.2rem !important;
-        padding-bottom: 3rem !important;
-        padding-left: 1.5rem !important;
-        padding-right: 1.5rem !important;
+        max-width: 560px !important;
+        padding-top: 0.5rem !important;
+        padding-bottom: 4rem !important;
+        padding-left: 0.75rem !important;
+        padding-right: 0.75rem !important;
+        margin: 0 auto !important;
     }
-    
+
     body, [class*="css"] {
-        font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        color: #0f172a;
+        font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+        background-color: #f8fafc !important;
+        color: #0f172a !important;
+        -webkit-font-smoothing: antialiased;
     }
-    
-    /* Top App Header Banner */
-    .hero-banner {
-        background: #0f172a;
-        background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0369a1 100%);
-        border: 1px solid #334155;
+
+    /* 3. SLEEK MOBILE APP BAR */
+    .mobile-app-bar {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
         border-radius: 18px;
-        padding: 24px 28px;
-        color: white;
-        margin-bottom: 20px;
+        padding: 12px 16px;
+        margin-bottom: 12px;
         display: flex;
         justify-content: space-between;
         align-items: center;
-        box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.25);
+        box-shadow: 0 4px 14px rgba(15, 23, 42, 0.04);
     }
-    
-    .hero-title {
-        font-size: 28px;
+    .app-brand {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .brand-icon {
+        font-size: 24px;
+        line-height: 1;
+    }
+    .brand-name {
+        font-size: 19px;
         font-weight: 800;
-        color: #ffffff;
-        margin: 0;
+        color: #0f172a;
         letter-spacing: -0.5px;
-        display: flex;
-        align-items: center;
-        gap: 10px;
+        line-height: 1;
     }
-    
-    .hero-subtitle {
-        font-size: 14px;
-        color: #bae6fd;
-        margin-top: 4px;
-        font-weight: 500;
-    }
-    
-    /* Metric Cards: Bold, High Contrast & Clean */
-    .stat-card {
-        background: #ffffff;
-        border-radius: 16px;
-        padding: 20px 18px;
-        border: 2px solid #f1f5f9;
-        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.04);
-        text-align: left;
-        transition: all 0.2s ease-in-out;
-    }
-    .stat-card:hover {
-        border-color: #cbd5e1;
-        box-shadow: 0 8px 20px rgba(15, 23, 42, 0.07);
-    }
-    .stat-label {
-        font-size: 13px;
-        font-weight: 700;
-        color: #64748b;
-        text-transform: uppercase;
-        letter-spacing: 0.6px;
-        display: flex;
-        align-items: center;
-        gap: 6px;
-    }
-    .stat-number {
-        font-size: 28px;
-        font-weight: 800;
-        margin-top: 8px;
-        margin-bottom: 8px;
-        letter-spacing: -0.8px;
-    }
-    .stat-sub {
-        font-size: 13px;
+    .brand-tag {
+        font-size: 11px;
         font-weight: 600;
-        color: #475569;
+        color: #64748b;
+        margin-top: 2px;
+    }
+    .live-badge {
+        background: #f0fdf4;
+        border: 1px solid #bbf7d0;
+        color: #15803d;
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 700;
         display: flex;
         align-items: center;
-        gap: 6px;
+        gap: 5px;
     }
-    
-    /* Color Highlights */
-    .c-expense { color: #dc2626 !important; }
-    .c-budget { color: #0284c7 !important; }
-    .c-savings { color: #059669 !important; }
-    
-    /* Progress Bar */
-    .progress-track {
-        background: #e2e8f0;
-        border-radius: 8px;
-        height: 8px;
+    .live-dot {
+        width: 7px;
+        height: 7px;
+        background: #22c55e;
+        border-radius: 50%;
+        animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+        0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
+        70% { transform: scale(1); box-shadow: 0 0 0 5px rgba(34, 197, 94, 0); }
+        100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+    }
+
+    /* 4. IOS STYLE SEGMENTED PILL TOGGLE (HIDES UGLY RADIO CIRCLES) */
+    div[data-testid="stRadio"] > label {
+        display: none !important;
+    }
+    div[data-testid="stRadio"] div[role="radiogroup"] {
+        display: flex !important;
+        flex-direction: row !important;
+        background: #e2e8f0 !important;
+        border-radius: 14px !important;
+        padding: 4px !important;
+        gap: 4px !important;
+        margin-bottom: 12px !important;
+        width: 100% !important;
+    }
+    div[data-testid="stRadio"] div[role="radiogroup"] label {
+        flex: 1 !important;
+        background: transparent !important;
+        border: none !important;
+        border-radius: 10px !important;
+        padding: 9px 4px !important;
+        margin: 0 !important;
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+        cursor: pointer !important;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    }
+    div[data-testid="stRadio"] div[role="radiogroup"] input[type="radio"],
+    div[data-testid="stRadio"] div[role="radiogroup"] svg,
+    div[data-testid="stRadio"] div[role="radiogroup"] div[data-testid="stMarkdownContainer"] ~ div {
+        display: none !important;
+    }
+    div[data-testid="stRadio"] div[role="radiogroup"] p {
+        font-size: 13.5px !important;
+        font-weight: 700 !important;
+        color: #475569 !important;
+        margin: 0 !important;
+        text-align: center !important;
+    }
+    div[data-testid="stRadio"] div[role="radiogroup"] label:has(input:checked) {
+        background: #ffffff !important;
+        box-shadow: 0 2px 8px rgba(15, 23, 42, 0.12) !important;
+    }
+    div[data-testid="stRadio"] div[role="radiogroup"] label:has(input:checked) p {
+        color: #0284c7 !important;
+        font-weight: 800 !important;
+    }
+
+    /* 5. FINTECH HERO WALLET CARD (CRED / APPLE WALLET STYLE) */
+    .wallet-card {
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 60%, #0369a1 100%);
+        border-radius: 20px;
+        padding: 20px 18px;
+        color: #ffffff;
+        margin-bottom: 14px;
+        box-shadow: 0 12px 24px -4px rgba(15, 23, 42, 0.3);
+        position: relative;
+        overflow: hidden;
+    }
+    .wallet-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+    .wallet-label {
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.6px;
+        text-transform: uppercase;
+        color: #94a3b8;
+    }
+    .wallet-month-tag {
+        background: rgba(255, 255, 255, 0.12);
+        backdrop-filter: blur(8px);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        padding: 3px 10px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 700;
+        color: #e0f2fe;
+    }
+    .wallet-amount {
+        font-size: 34px;
+        font-weight: 800;
+        letter-spacing: -1px;
+        color: #ffffff;
+        line-height: 1;
+        margin-bottom: 14px;
+    }
+    .wallet-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        background: rgba(15, 23, 42, 0.45);
+        backdrop-filter: blur(8px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 14px;
+        padding: 12px;
+    }
+    .wallet-sub-title {
+        font-size: 11px;
+        font-weight: 600;
+        color: #94a3b8;
+        margin-bottom: 2px;
+    }
+    .wallet-sub-val {
+        font-size: 15px;
+        font-weight: 800;
+        color: #f8fafc;
+    }
+    .wallet-bar-track {
+        background: rgba(255, 255, 255, 0.15);
+        border-radius: 6px;
+        height: 6px;
         width: 100%;
         overflow: hidden;
-        margin-top: 6px;
+        margin-top: 5px;
     }
-    .progress-fill {
+    .wallet-bar-fill {
         height: 100%;
-        border-radius: 8px;
+        border-radius: 6px;
         transition: width 0.3s ease;
     }
-    
-    /* Transaction Row Cards */
+
+    /* 6. HORIZONTAL SCROLLABLE PILL TABS */
+    .stTabs [data-baseweb="tab-list"] {
+        display: flex !important;
+        overflow-x: auto !important;
+        scrollbar-width: none !important;
+        -webkit-overflow-scrolling: touch !important;
+        gap: 6px !important;
+        padding: 4px 2px 10px 2px !important;
+        border-bottom: none !important;
+    }
+    .stTabs [data-baseweb="tab-list"]::-webkit-scrollbar {
+        display: none !important;
+    }
+    .stTabs [data-baseweb="tab"] {
+        background: #f1f5f9 !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 20px !important;
+        padding: 7px 14px !important;
+        font-size: 13px !important;
+        font-weight: 700 !important;
+        color: #475569 !important;
+        white-space: nowrap !important;
+        flex-shrink: 0 !important;
+        transition: all 0.2s ease !important;
+    }
+    .stTabs [aria-selected="true"] {
+        background: #0f172a !important;
+        border-color: #0f172a !important;
+        color: #ffffff !important;
+        box-shadow: 0 4px 10px rgba(15, 23, 42, 0.18) !important;
+    }
+
+    /* 7. QUICK ACTION CHIPS */
+    .stButton > button {
+        border-radius: 12px !important;
+        font-weight: 700 !important;
+        padding: 8px 12px !important;
+        border: 1px solid #e2e8f0 !important;
+        font-size: 13px !important;
+        transition: transform 0.1s ease !important;
+    }
+    .stButton > button:active {
+        transform: scale(0.97) !important;
+    }
+
+    /* 8. MODERN TRANSACTION LIST CARDS */
     .tx-card {
         background: #ffffff;
-        border-radius: 12px;
-        padding: 14px 18px;
-        border: 1px solid #e2e8f0;
-        margin-bottom: 10px;
+        border: 1px solid #f1f5f9;
+        border-radius: 14px;
+        padding: 12px 14px;
+        margin-bottom: 8px;
         display: flex;
         justify-content: space-between;
         align-items: center;
+        box-shadow: 0 2px 6px rgba(15, 23, 42, 0.03);
     }
-    
-    /* Section Headings */
     .section-title {
-        font-size: 18px;
+        font-size: 16px;
         font-weight: 800;
         color: #0f172a;
         margin-top: 14px;
-        margin-bottom: 12px;
+        margin-bottom: 10px;
         display: flex;
         align-items: center;
-        gap: 8px;
+        gap: 6px;
     }
-    
-    /* Form Boxes */
     .form-box {
         background: #ffffff;
-        border: 2px solid #e2e8f0;
+        border: 1px solid #e2e8f0;
         border-radius: 16px;
-        padding: 22px;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.03);
+        padding: 18px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
     }
-    
-    /* AI Box */
-    .ai-insight-box {
-        background: linear-gradient(135deg, #f0fdf4 0%, #e0f2fe 100%);
-        border: 2px solid #7dd3fc;
-        border-radius: 16px;
-        padding: 20px 24px;
-        margin-top: 15px;
-        margin-bottom: 20px;
-    }
-    
-    /* Loan Cards */
     .loan-card {
         background: #ffffff;
-        border: 2px solid #e2e8f0;
-        border-left: 6px solid #0284c7;
+        border: 1px solid #e2e8f0;
+        border-left: 5px solid #0284c7;
         border-radius: 14px;
-        padding: 16px 20px;
-        margin-bottom: 12px;
-    }
-
-    /* Tab styling */
-    .stTabs [data-baseweb="tab-list"] {
-        gap: 8px;
-        border-bottom: 2px solid #e2e8f0;
-        padding-bottom: 6px;
-    }
-    .stTabs [data-baseweb="tab"] {
-        font-size: 15px;
-        font-weight: 700;
-        padding: 10px 18px;
-        border-radius: 10px;
-        color: #475569;
-    }
-    .stTabs [aria-selected="true"] {
-        background-color: #0f172a !important;
-        color: #ffffff !important;
+        padding: 14px 16px;
+        margin-bottom: 10px;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -630,36 +757,32 @@ def extract_merchant_regex(text, default="இதர"):
             return name
     return default
 
-# --- TOP BOLD APP BAR ---
+# --- TOP SLEEK MOBILE APP BAR ---
 st.markdown("""
-<div class="hero-banner">
-    <div>
-        <div class="hero-title">🪙 KasuAI</div>
-        <div class="hero-subtitle">குடும்ப நிதி, ஸ்மார்ட் SMS மூளை & சேமிப்பு மேலாண்மை</div>
+<div class="mobile-app-bar">
+    <div class="app-brand">
+        <span class="brand-icon">🪙</span>
+        <div>
+            <div class="brand-name">KasuAI</div>
+            <div class="brand-tag">குடும்ப நிதி & செலவு மேலாண்மை</div>
+        </div>
     </div>
-    <div style="text-align:right;">
-        <span style="background:#22c55e; color:#0f172a; padding:6px 14px; border-radius:20px; font-weight:800; font-size:12px;">🟢 Supabase Cloud 24/7</span>
+    <div class="live-badge">
+        <span class="live-dot"></span>
+        <span>கிளவுட் நேரலை</span>
     </div>
 </div>
 """, unsafe_allow_html=True)
 
-# --- USER SELECTOR & QUICK BAR ---
-col_u1, col_u2 = st.columns([1.5, 1])
-with col_u1:
-    active_user = st.radio(
-        "👤 தற்போதைய பயனர் யார்?", 
-        ["👤 ராஜ்குமார் (கணவர்)", "👩 மனைவி (வீட்டுச் செலவு)"], 
-        horizontal=True,
-        label_visibility="collapsed"
-    )
+# --- USER SELECTOR (IOS SEGMENTED PILL) ---
+active_user = st.radio(
+    "👤 தற்போதைய பயனர்:", 
+    ["👤 ராஜ்குமார் (கணவர்)", "👩 மனைவி (வீட்டுச் செலவு)"], 
+    horizontal=True,
+    label_visibility="collapsed"
+)
 
-with col_u2:
-    current_time_str = datetime.now().strftime("%d-%b-%Y | %I:%M %p")
-    st.markdown(f"<div style='text-align:right; font-size:13px; font-weight:600; color:#64748b; padding-top:8px;'>📅 {current_time_str}</div>", unsafe_allow_html=True)
-
-st.write("")
-
-# --- GEMINI API KEY SETUP IN EXPANDER ---
+# --- GEMINI API KEY SETUP IN SIDEBAR ---
 gemini_api_key = os.getenv("GEMINI_API_KEY", "")
 with st.sidebar:
     st.header("⚙️ KasuAI அமைப்புகள்")
@@ -701,9 +824,11 @@ with tab_dash:
         unique_months = [m for m in unique_months if m != current_m]
         available_months += unique_months
         
-    m_col1, m_col2 = st.columns([1, 2])
+    m_col1, m_col2 = st.columns([1.8, 1.2])
     with m_col1:
-        selected_view = st.selectbox("📅 கணக்கு மாதம்:", available_months)
+        selected_view = st.selectbox("📅 கணக்கு மாதம்:", available_months, label_visibility="collapsed")
+    with m_col2:
+        st.markdown(f"<div style='text-align:right; font-size:12px; font-weight:700; color:#64748b; padding-top:8px;'>📅 {datetime.now().strftime('%d-%b-%Y')}</div>", unsafe_allow_html=True)
     
     target_month = current_m if selected_view == "இந்த மாதம் (நடப்பு மாதம்)" else selected_view
     df = all_df[all_df['month_year'] == target_month] if not all_df.empty and 'month_year' in all_df else pd.DataFrame()
@@ -713,51 +838,33 @@ with tab_dash:
     wife_remaining = max(0.0, 40000.0 - wife_spent)
     wife_pct = min(100.0, (wife_spent / 40000.0) * 100.0) if 40000.0 > 0 else 0.0
     savings_est = max(0.0, 65000.0 - total_spent)
+    fill_color = "#38bdf8" if wife_pct < 85 else "#f97316" if wife_pct < 100 else "#ef4444"
     
-    # 3 BOLD HERO METRICS
-    c1, c2, c3 = st.columns(3)
-    
-    with c1:
-        st.markdown(f"""
-        <div class="stat-card">
-            <div class="stat-label">💳 மொத்த செலவு ({target_month})</div>
-            <div class="stat-number c-expense">₹{total_spent:,.2f}</div>
-            <div class="stat-sub">
-                <span style="background:#fee2e2; color:#991b1b; padding:2px 8px; border-radius:6px; font-weight:700;">
-                    {len(df)} பரிவர்த்தனைகள்
-                </span>
+    # FINTECH HERO WALLET CARD (CRED / APPLE WALLET STYLE)
+    st.markdown(f"""
+    <div class="wallet-card">
+        <div class="wallet-header">
+            <span class="wallet-label">💳 மொத்தக் குடும்பச் செலவு</span>
+            <span class="wallet-month-tag">{target_month}</span>
+        </div>
+        <div class="wallet-amount">₹{total_spent:,.2f}</div>
+        <div class="wallet-grid">
+            <div>
+                <div class="wallet-sub-title">👩 மனைவி பட்ஜெட் (₹40,000)</div>
+                <div class="wallet-sub-val">₹{wife_spent:,.2f}</div>
+                <div class="wallet-bar-track">
+                    <div class="wallet-bar-fill" style="width: {wife_pct}%; background: {fill_color};"></div>
+                </div>
+                <div style="font-size:10.5px; color:#cbd5e1; margin-top:4px;">மீதம்: ₹{wife_remaining:,.0f} ({wife_pct:.0f}%)</div>
+            </div>
+            <div>
+                <div class="wallet-sub-title">💰 சேமிப்பு நிலை (இலக்கு ₹65K)</div>
+                <div class="wallet-sub-val" style="color:#4ade80;">₹{savings_est:,.2f}</div>
+                <div style="font-size:10.5px; color:#cbd5e1; margin-top:12px;">{len(df)} பரிவர்த்தனைகள்</div>
             </div>
         </div>
-        """, unsafe_allow_html=True)
-        
-    with c2:
-        fill_color = "#0284c7" if wife_pct < 85 else "#ea580c" if wife_pct < 100 else "#dc2626"
-        st.markdown(f"""
-        <div class="stat-card">
-            <div class="stat-label">👩 மனைவி பட்ஜெட் (₹40,000)</div>
-            <div class="stat-number c-budget">₹{wife_spent:,.2f}</div>
-            <div class="progress-track">
-                <div class="progress-fill" style="width: {wife_pct}%; background: {fill_color};"></div>
-            </div>
-            <div class="stat-sub" style="margin-top:8px; justify-content:space-between;">
-                <span>மீதம்: <b>₹{wife_remaining:,.2f}</b></span>
-                <span style="font-size:11px; color:#64748b;">{wife_pct:.1f}%</span>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-        
-    with c3:
-        st.markdown(f"""
-        <div class="stat-card">
-            <div class="stat-label">💰 மாத சேமிப்பு நிலை</div>
-            <div class="stat-number c-savings">₹{savings_est:,.2f}</div>
-            <div class="stat-sub">
-                <span style="background:#dcfce7; color:#166534; padding:2px 8px; border-radius:6px; font-weight:700;">
-                    இலக்கு: ₹65,000
-                </span>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
+    </div>
+    """, unsafe_allow_html=True)
         
     # KASUAI SMART FINANCIAL ADVISOR BUTTON
     st.write("")
@@ -801,33 +908,30 @@ with tab_dash:
     st.write("")
     
     if not df.empty:
-        ch_col1, ch_col2 = st.columns([1, 1])
         summary = df.groupby("category")["amount"].sum().reset_index()
         
-        with ch_col1:
-            st.markdown('<div class="section-title">🍩 துறை வாரியான செலவுப் பகிர்வு</div>', unsafe_allow_html=True)
-            fig = px.pie(
-                summary, values="amount", names="category", hole=0.5,
-                color_discrete_sequence=["#0284c7", "#059669", "#d97706", "#dc2626", "#7c3aed", "#0891b2", "#64748b"]
-            )
-            fig.update_traces(textposition='inside', textinfo='percent+label')
-            fig.update_layout(
-                margin=dict(t=10, b=10, l=10, r=10), 
-                height=290,
-                showlegend=False
-            )
-            st.plotly_chart(fig, use_container_width=True)
-            
-        with ch_col2:
-            st.markdown('<div class="section-title">📊 செலவு அட்டவணை</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-title">🍩 துறை வாரியான செலவுப் பகிர்வு</div>', unsafe_allow_html=True)
+        fig = px.pie(
+            summary, values="amount", names="category", hole=0.5,
+            color_discrete_sequence=["#0284c7", "#059669", "#d97706", "#dc2626", "#7c3aed", "#0891b2", "#64748b"]
+        )
+        fig.update_traces(textposition='inside', textinfo='percent+label')
+        fig.update_layout(
+            margin=dict(t=10, b=10, l=10, r=10), 
+            height=260,
+            showlegend=False
+        )
+        st.plotly_chart(fig, use_container_width=True)
+        
+        with st.expander("📊 விரிவான செலவு அட்டவணை"):
             sum_disp = summary.rename(columns={"category": "பிரிவு", "amount": "தொகை (₹)"}).copy()
             sum_disp["தொகை (₹)"] = sum_disp["தொகை (₹)"].apply(lambda x: f"₹{x:,.2f}")
-            st.dataframe(sum_disp, use_container_width=True, height=270, hide_index=True)
+            st.dataframe(sum_disp, use_container_width=True, hide_index=True)
             
         st.markdown('<div class="section-title">📋 சமீபத்திய செலவுகள் (நீக்க/சரிபார்க்க)</div>', unsafe_allow_html=True)
         recent_df = df.sort_values(by="id", ascending=False)
         for _, r in recent_df.head(15).iterrows():
-            d_col1, d_col2 = st.columns([5, 1])
+            d_col1, d_col2 = st.columns([4.2, 1.2])
             date_disp = str(r['date'])[:16] if pd.notna(r['date']) else ""
             notes_disp = f" — {str(r['notes'])[:35]}" if pd.notna(r['notes']) and r['notes'] else ""
             merchant_disp = f"[{r['merchant']}] " if pd.notna(r['merchant']) and r['merchant'] != r['category'] else ""
@@ -862,11 +966,7 @@ with tab_dash:
 
 # ==================== 2. ADD EXPENSE & SMS DECODER ====================
 with tab_entry:
-    st.markdown('<div class="section-title">⚡ விரைவுச் செலவுப் பதிவு & KasuAI SMS டிகோடர்</div>', unsafe_allow_html=True)
-    
-    # 1-CLICK QUICK CHIPS FOR COMMON DAILY EXPENSES
-    st.markdown("<span style='font-size:13px; font-weight:700; color:#64748b;'>⚡ ஒரு க்ளிக் நேரடிச் செலவு (Quick Presets):</span>", unsafe_allow_html=True)
-    q_c1, q_c2, q_c3, q_c4, q_c5 = st.columns(5)
+    st.markdown('<div class="section-title">⚡ ஒரு க்ளிக் நேரடிச் செலவு (Quick Presets)</div>', unsafe_allow_html=True)
     
     def add_quick_expense(cat, amt, note):
         db_insert_expense(
@@ -881,96 +981,97 @@ with tab_entry:
         st.success(f"✅ {note} ₹{amt} ({active_user}) கணக்கில் சேர்க்கப்பட்டது!")
         st.rerun()
 
-    if q_c1.button("☕ டீ / ஸ்நாக்ஸ் ₹20"):
+    q_r1_c1, q_r1_c2, q_r1_c3 = st.columns(3)
+    if q_r1_c1.button("☕ டீ ₹20", use_container_width=True):
         add_quick_expense("டீ & சிற்றுண்டி", 20.0, "டீ / காபி")
-    if q_c2.button("🥛 பால் பாக்கெட் ₹35"):
+    if q_r1_c2.button("🥛 பால் ₹35", use_container_width=True):
         add_quick_expense("மளிகை & உணவு", 35.0, "பால்")
-    if q_c3.button("🥦 காய்கறி ₹150"):
+    if q_r1_c3.button("🥦 காய் ₹150", use_container_width=True):
         add_quick_expense("மளிகை & உணவு", 150.0, "காய்கறி")
-    if q_c4.button("⛽ பெட்ரோல் ₹200"):
+        
+    q_r2_c1, q_r2_c2 = st.columns(2)
+    if q_r2_c1.button("⛽ பெட்ரோல் ₹200", use_container_width=True):
         add_quick_expense("வாகனம் & Fuel", 200.0, "பெட்ரோல்")
-    if q_c5.button("🌾 மளிகை ₹500"):
+    if q_r2_c2.button("🌾 மளிகை ₹500", use_container_width=True):
         add_quick_expense("மளிகை & உணவு", 500.0, "மளிகைக் கடை")
         
     st.write("")
     
-    col_in1, col_in2 = st.columns([1, 1])
+    st.markdown("""
+    <div class="form-box">
+        <div style="font-size:15px; font-weight:800; color:#0f172a; margin-bottom:10px;">
+            🧠 1. KasuAI SMS டிகோடர் (பேஸ்ட் செய்யவும்)
+        </div>
+    """, unsafe_allow_html=True)
     
-    with col_in1:
-        st.markdown("""
-        <div class="form-box">
-            <div style="font-size:16px; font-weight:800; color:#0f172a; margin-bottom:12px;">
-                🧠 1. KasuAI SMS டிகோடர் (பேஸ்ட் செய்யவும்)
-            </div>
-        """, unsafe_allow_html=True)
-        
-        sms_txt = st.text_area(
-            "SMS உரை:", 
-            placeholder="வங்கி மெசேஜ், UPI டெபிட், OTP, அல்லது எச்சரிக்கை செய்தியை இங்கே பேஸ்ட் செய்யவும்...", 
-            height=135,
-            label_visibility="collapsed"
-        )
-        
-        if st.button("🚀 KasuAI மூலம் படித்துப் பதிவு செய்", type="primary", use_container_width=True):
-            if sms_txt.strip():
-                with st.spinner("KasuAI SMS-ஐப் பகுப்பாய்வு செய்கிறது..."):
-                    result = parse_sms_with_brain(sms_txt, gemini_api_key)
-                    
-                if result and result["is_expense"] and result["amount"] > 0:
-                    db_insert_expense(
-                        datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                        active_user,
-                        result["category"],
-                        result["amount"],
-                        "SMS / UPI",
-                        result["merchant"],
-                        sms_txt
-                    )
-                    st.success(f"💳 **{result['category']}** செலவு ₹{result['amount']:,.2f} ({result['merchant']}) கணக்கில் சேர்க்கப்பட்டது! [பகுப்பாய்வு: {result['source']}]")
-                    st.rerun()
-                else:
-                    cat = result["category"] if result else "இதர அறிவிப்பு"
-                    explanation = result["explanation"] if result else "தகவல் அறிவிப்பு"
-                    db_insert_alert(
-                        datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                        "SMS",
-                        cat,
-                        explanation,
-                        sms_txt
-                    )
-                    st.info(f"🔔 **{cat}:** {explanation}")
-                    st.rerun()
-            else:
-                st.warning("SMS உரையை உள்ளிடவும்!")
-        st.markdown("</div>", unsafe_allow_html=True)
-
-    with col_in2:
-        st.markdown("""
-        <div class="form-box">
-            <div style="font-size:16px; font-weight:800; color:#0f172a; margin-bottom:12px;">
-                ✍️ 2. கைமுறைப் பதிவு (ரொக்கச் செலவு)
-            </div>
-        """, unsafe_allow_html=True)
-        
-        with st.form("manual_entry_form"):
-            man_amt = st.number_input("தொகை (₹):", min_value=1.0, value=50.0, step=10.0)
-            man_cat = st.selectbox("பிரிவு:", ["மளிகை & உணவு", "டீ & சிற்றுண்டி", "வாகனம் & Fuel", "மின்சாரக் கட்டணம்", "கடன்கள் & EMI", "விவசாயச் செலவு", "மருத்துவம்", "இதர செலவுகள்"])
-            man_mode = st.selectbox("செலுத்திய முறை:", ["ரொக்கம் (Cash)", "PhonePe / GPay", "வங்கி கணக்கு"])
-            man_notes = st.text_input("குறிப்பு (எ.கா: காய்கறி, டீ, மளிகை):", "")
-            
-            if st.form_submit_button("➕ செலவைச் சேமிக்கவும்", type="primary", use_container_width=True):
+    sms_txt = st.text_area(
+        "SMS உரை:", 
+        placeholder="வங்கி மெசேஜ், UPI டெபிட், OTP, அல்லது எச்சரிக்கை செய்தியை இங்கே பேஸ்ட் செய்யவும்...", 
+        height=110,
+        label_visibility="collapsed"
+    )
+    
+    if st.button("🚀 KasuAI மூலம் படித்துப் பதிவு செய்", type="primary", use_container_width=True):
+        if sms_txt.strip():
+            with st.spinner("KasuAI SMS-ஐப் பகுப்பாய்வு செய்கிறது..."):
+                result = parse_sms_with_brain(sms_txt, gemini_api_key)
+                
+            if result and result["is_expense"] and result["amount"] > 0:
                 db_insert_expense(
                     datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                     active_user,
-                    man_cat,
-                    man_amt,
-                    man_mode,
-                    man_notes or "நேரடிப் பதிவு",
-                    man_notes
+                    result["category"],
+                    result["amount"],
+                    "SMS / UPI",
+                    result["merchant"],
+                    sms_txt
                 )
-                st.success(f"✅ ₹{man_amt:,.2f} ({man_cat}) பதிவானது!")
+                st.success(f"💳 **{result['category']}** செலவு ₹{result['amount']:,.2f} ({result['merchant']}) கணக்கில் சேர்க்கப்பட்டது! [பகுப்பாய்வு: {result['source']}]")
                 st.rerun()
-        st.markdown("</div>", unsafe_allow_html=True)
+            else:
+                cat = result["category"] if result else "இதர அறிவிப்பு"
+                explanation = result["explanation"] if result else "தகவல் அறிவிப்பு"
+                db_insert_alert(
+                    datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                    "SMS",
+                    cat,
+                    explanation,
+                    sms_txt
+                )
+                st.info(f"🔔 **{cat}:** {explanation}")
+                st.rerun()
+        else:
+            st.warning("SMS உரையை உள்ளிடவும்!")
+    st.markdown("</div>", unsafe_allow_html=True)
+
+    st.write("")
+
+    st.markdown("""
+    <div class="form-box">
+        <div style="font-size:15px; font-weight:800; color:#0f172a; margin-bottom:10px;">
+            ✍️ 2. கைமுறைப் பதிவு (ரொக்கச் செலவு)
+        </div>
+    """, unsafe_allow_html=True)
+    
+    with st.form("manual_entry_form"):
+        man_amt = st.number_input("தொகை (₹):", min_value=1.0, value=50.0, step=10.0)
+        man_cat = st.selectbox("பிரிவு:", ["மளிகை & உணவு", "டீ & சிற்றுண்டி", "வாகனம் & Fuel", "மின்சாரக் கட்டணம்", "கடன்கள் & EMI", "விவசாயச் செலவு", "மருத்துவம்", "இதர செலவுகள்"])
+        man_mode = st.selectbox("செலுத்திய முறை:", ["ரொக்கம் (Cash)", "PhonePe / GPay", "வங்கி கணக்கு"])
+        man_notes = st.text_input("குறிப்பு (எ.கா: காய்கறி, டீ, மளிகை):", "")
+        
+        if st.form_submit_button("➕ செலவைச் சேமிக்கவும்", type="primary", use_container_width=True):
+            db_insert_expense(
+                datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                active_user,
+                man_cat,
+                man_amt,
+                man_mode,
+                man_notes or "நேரடிப் பதிவு",
+                man_notes
+            )
+            st.success(f"✅ ₹{man_amt:,.2f} ({man_cat}) பதிவானது!")
+            st.rerun()
+    st.markdown("</div>", unsafe_allow_html=True)
 
 # ==================== 3. LOANS & EMI ====================
 with tab_loans:
