@@ -17,12 +17,12 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- ULTRA MODERN MOBILE-FIRST FINTECH STYLING ---
+# --- CLEAN MOBILE-FIRST STYLING (No Tamil font issues) ---
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
     
-    /* 1. COMPLETELY HIDE ALL STREAMLIT CHROME, HEADERS, FOOTERS & BUTTONS */
+    /* 1. HIDE ALL STREAMLIT CHROME */
     #MainMenu, header, footer, 
     [data-testid="stToolbar"], 
     [data-testid="stDecoration"], 
@@ -42,7 +42,7 @@ st.markdown("""
         padding: 0 !important;
     }
     
-    /* 2. MOBILE APP CONTAINER - Centered, Edge-to-Edge Touch Friendly */
+    /* 2. MOBILE CONTAINER */
     .block-container {
         max-width: 560px !important;
         padding-top: 0.5rem !important;
@@ -53,35 +53,25 @@ st.markdown("""
     }
 
     body, [class*="css"] {
-        font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
-        background-color: #f8fafc !important;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+        background-color: #f1f5f9 !important;
         color: #0f172a !important;
         -webkit-font-smoothing: antialiased;
     }
 
-    /* 3. SLEEK MOBILE APP BAR */
+    /* 3. APP BAR */
     .mobile-app-bar {
         background: #ffffff;
-        border: 1px solid #e2e8f0;
-        border-radius: 18px;
+        border-radius: 16px;
         padding: 12px 16px;
-        margin-bottom: 12px;
+        margin-bottom: 10px;
         display: flex;
         justify-content: space-between;
         align-items: center;
-        box-shadow: 0 4px 14px rgba(15, 23, 42, 0.04);
-    }
-    .app-brand {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-    .brand-icon {
-        font-size: 24px;
-        line-height: 1;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.06);
     }
     .brand-name {
-        font-size: 19px;
+        font-size: 20px;
         font-weight: 800;
         color: #0f172a;
         letter-spacing: -0.5px;
@@ -89,7 +79,7 @@ st.markdown("""
     }
     .brand-tag {
         font-size: 11px;
-        font-weight: 600;
+        font-weight: 500;
         color: #64748b;
         margin-top: 2px;
     }
@@ -118,10 +108,8 @@ st.markdown("""
         100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
     }
 
-    /* 4. IOS STYLE SEGMENTED PILL TOGGLE (HIDES UGLY RADIO CIRCLES) */
-    div[data-testid="stRadio"] > label {
-        display: none !important;
-    }
+    /* 4. IOS PILL TOGGLE */
+    div[data-testid="stRadio"] > label { display: none !important; }
     div[data-testid="stRadio"] div[role="radiogroup"] {
         display: flex !important;
         flex-direction: row !important;
@@ -143,7 +131,7 @@ st.markdown("""
         justify-content: center !important;
         align-items: center !important;
         cursor: pointer !important;
-        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        transition: all 0.2s ease !important;
     }
     div[data-testid="stRadio"] div[role="radiogroup"] input[type="radio"],
     div[data-testid="stRadio"] div[role="radiogroup"] svg,
@@ -151,7 +139,7 @@ st.markdown("""
         display: none !important;
     }
     div[data-testid="stRadio"] div[role="radiogroup"] p {
-        font-size: 13.5px !important;
+        font-size: 13px !important;
         font-weight: 700 !important;
         color: #475569 !important;
         margin: 0 !important;
@@ -159,21 +147,21 @@ st.markdown("""
     }
     div[data-testid="stRadio"] div[role="radiogroup"] label:has(input:checked) {
         background: #ffffff !important;
-        box-shadow: 0 2px 8px rgba(15, 23, 42, 0.12) !important;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
     }
     div[data-testid="stRadio"] div[role="radiogroup"] label:has(input:checked) p {
         color: #0284c7 !important;
         font-weight: 800 !important;
     }
 
-    /* 5. FINTECH HERO WALLET CARD (CRED / APPLE WALLET STYLE) */
+    /* 5. WALLET CARD */
     .wallet-card {
         background: linear-gradient(135deg, #0f172a 0%, #1e293b 60%, #0369a1 100%);
         border-radius: 20px;
-        padding: 20px 18px;
+        padding: 18px 16px;
         color: #ffffff;
-        margin-bottom: 14px;
-        box-shadow: 0 12px 24px -4px rgba(15, 23, 42, 0.3);
+        margin-bottom: 12px;
+        box-shadow: 0 10px 24px -4px rgba(15, 23, 42, 0.28);
         position: relative;
         overflow: hidden;
     }
@@ -181,19 +169,18 @@ st.markdown("""
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 10px;
+        margin-bottom: 8px;
     }
     .wallet-label {
-        font-size: 12px;
+        font-size: 11px;
         font-weight: 700;
         letter-spacing: 0.6px;
         text-transform: uppercase;
         color: #94a3b8;
     }
     .wallet-month-tag {
-        background: rgba(255, 255, 255, 0.12);
-        backdrop-filter: blur(8px);
-        border: 1px solid rgba(255, 255, 255, 0.15);
+        background: rgba(255,255,255,0.12);
+        border: 1px solid rgba(255,255,255,0.15);
         padding: 3px 10px;
         border-radius: 12px;
         font-size: 11px;
@@ -201,25 +188,24 @@ st.markdown("""
         color: #e0f2fe;
     }
     .wallet-amount {
-        font-size: 34px;
+        font-size: 32px;
         font-weight: 800;
         letter-spacing: -1px;
         color: #ffffff;
         line-height: 1;
-        margin-bottom: 14px;
+        margin-bottom: 12px;
     }
     .wallet-grid {
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 10px;
-        background: rgba(15, 23, 42, 0.45);
-        backdrop-filter: blur(8px);
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: rgba(15,23,42,0.45);
+        border: 1px solid rgba(255,255,255,0.1);
         border-radius: 14px;
         padding: 12px;
     }
     .wallet-sub-title {
-        font-size: 11px;
+        font-size: 10px;
         font-weight: 600;
         color: #94a3b8;
         margin-bottom: 2px;
@@ -230,9 +216,9 @@ st.markdown("""
         color: #f8fafc;
     }
     .wallet-bar-track {
-        background: rgba(255, 255, 255, 0.15);
+        background: rgba(255,255,255,0.15);
         border-radius: 6px;
-        height: 6px;
+        height: 5px;
         width: 100%;
         overflow: hidden;
         margin-top: 5px;
@@ -240,10 +226,9 @@ st.markdown("""
     .wallet-bar-fill {
         height: 100%;
         border-radius: 6px;
-        transition: width 0.3s ease;
     }
 
-    /* 6. HORIZONTAL SCROLLABLE PILL TABS */
+    /* 6. TABS */
     .stTabs [data-baseweb="tab-list"] {
         display: flex !important;
         overflow-x: auto !important;
@@ -253,9 +238,7 @@ st.markdown("""
         padding: 4px 2px 10px 2px !important;
         border-bottom: none !important;
     }
-    .stTabs [data-baseweb="tab-list"]::-webkit-scrollbar {
-        display: none !important;
-    }
+    .stTabs [data-baseweb="tab-list"]::-webkit-scrollbar { display: none !important; }
     .stTabs [data-baseweb="tab"] {
         background: #f1f5f9 !important;
         border: 1px solid #e2e8f0 !important;
@@ -272,10 +255,10 @@ st.markdown("""
         background: #0f172a !important;
         border-color: #0f172a !important;
         color: #ffffff !important;
-        box-shadow: 0 4px 10px rgba(15, 23, 42, 0.18) !important;
+        box-shadow: 0 4px 10px rgba(15,23,42,0.18) !important;
     }
 
-    /* 7. QUICK ACTION CHIPS */
+    /* 7. BUTTONS */
     .stButton > button {
         border-radius: 12px !important;
         font-weight: 700 !important;
@@ -284,11 +267,9 @@ st.markdown("""
         font-size: 13px !important;
         transition: transform 0.1s ease !important;
     }
-    .stButton > button:active {
-        transform: scale(0.97) !important;
-    }
+    .stButton > button:active { transform: scale(0.97) !important; }
 
-    /* 8. MODERN TRANSACTION LIST CARDS */
+    /* 8. TRANSACTION CARDS */
     .tx-card {
         background: #ffffff;
         border: 1px solid #f1f5f9;
@@ -298,14 +279,14 @@ st.markdown("""
         display: flex;
         justify-content: space-between;
         align-items: center;
-        box-shadow: 0 2px 6px rgba(15, 23, 42, 0.03);
+        box-shadow: 0 1px 4px rgba(0,0,0,0.04);
     }
     .section-title {
-        font-size: 16px;
+        font-size: 15px;
         font-weight: 800;
         color: #0f172a;
         margin-top: 14px;
-        margin-bottom: 10px;
+        margin-bottom: 8px;
         display: flex;
         align-items: center;
         gap: 6px;
@@ -314,8 +295,8 @@ st.markdown("""
         background: #ffffff;
         border: 1px solid #e2e8f0;
         border-radius: 16px;
-        padding: 18px;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
+        padding: 16px;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.04);
     }
     .loan-card {
         background: #ffffff;
@@ -325,6 +306,20 @@ st.markdown("""
         padding: 14px 16px;
         margin-bottom: 10px;
     }
+
+    /* 9. CATEGORY BAR ROWS (replaces pie chart) */
+    .cat-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 0;
+        border-bottom: 1px solid #f1f5f9;
+    }
+    .cat-icon { font-size: 18px; width: 28px; text-align: center; flex-shrink: 0; }
+    .cat-label { font-size: 13px; font-weight: 600; color: #334155; flex: 1; min-width: 0; }
+    .cat-bar-wrap { flex: 2; background: #f1f5f9; border-radius: 6px; height: 8px; overflow: hidden; min-width: 60px; }
+    .cat-bar-fill { height: 100%; border-radius: 6px; }
+    .cat-amount { font-size: 13px; font-weight: 800; color: #0f172a; min-width: 60px; text-align: right; flex-shrink: 0; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -396,8 +391,9 @@ def get_supabase_headers():
     }
 
 # --- SUPABASE DATA ACCESS LAYER ---
+@st.cache_data(ttl=60)
 def db_get_expenses():
-    """Fetches all expenses from Supabase Cloud REST API with SQLite fallback."""
+    """Fetches all expenses from Supabase Cloud REST API with SQLite fallback. Cached 60s for speed."""
     if SUPABASE_URL and SUPABASE_KEY:
         try:
             url = f"{SUPABASE_URL}/rest/v1/expenses?select=*&order=date.desc"
@@ -870,27 +866,27 @@ def extract_merchant_regex(text, default="இதர"):
             return name
     return default
 
-# --- TOP SLEEK MOBILE APP BAR ---
+# --- TOP APP BAR ---
 st.markdown("""
 <div class="mobile-app-bar">
-    <div class="app-brand">
-        <span class="brand-icon">🪙</span>
+    <div style="display:flex; align-items:center; gap:10px;">
+        <span style="font-size:24px; line-height:1;">🪙</span>
         <div>
             <div class="brand-name">KasuAI</div>
-            <div class="brand-tag">குடும்ப நிதி & செலவு மேலாண்மை</div>
+            <div class="brand-tag">Family Finance Tracker • Free</div>
         </div>
     </div>
     <div class="live-badge">
         <span class="live-dot"></span>
-        <span>கிளவுட் நேரலை</span>
+        <span>Cloud Live</span>
     </div>
 </div>
 """, unsafe_allow_html=True)
 
-# --- USER SELECTOR (IOS SEGMENTED PILL) ---
+# --- USER SELECTOR ---
 active_user = st.radio(
-    "👤 தற்போதைய பயனர்:", 
-    ["👤 ராஜ்குமார் (கணவர்)", "👩 மனைவி (வீட்டுச் செலவு)"], 
+    "User:", 
+    ["👤 Rajkumar (Husband)", "👩 Wife (Home Budget)"], 
     horizontal=True,
     label_visibility="collapsed"
 )
@@ -947,41 +943,40 @@ with tab_dash:
     df = all_df[all_df['month_year'] == target_month] if not all_df.empty and 'month_year' in all_df else pd.DataFrame()
     
     total_spent = df['amount'].sum() if not df.empty else 0.0
-    wife_spent = df[df['user'].str.contains('மனைவி', na=False)]['amount'].sum() if not df.empty else 0.0
+    wife_spent = df[df['user'].str.contains('Wife|மனைவி', na=False)]['amount'].sum() if not df.empty else 0.0
     wife_remaining = max(0.0, 40000.0 - wife_spent)
     wife_pct = min(100.0, (wife_spent / 40000.0) * 100.0) if 40000.0 > 0 else 0.0
     savings_est = max(0.0, 65000.0 - total_spent)
     fill_color = "#38bdf8" if wife_pct < 85 else "#f97316" if wife_pct < 100 else "#ef4444"
     
-    # FINTECH HERO WALLET CARD (CRED / APPLE WALLET STYLE)
+    # WALLET CARD
     st.markdown(f"""
     <div class="wallet-card">
         <div class="wallet-header">
-            <span class="wallet-label">💳 மொத்தக் குடும்பச் செலவு</span>
+            <span class="wallet-label">💳 Total Family Spending</span>
             <span class="wallet-month-tag">{target_month}</span>
         </div>
-        <div class="wallet-amount">₹{total_spent:,.2f}</div>
+        <div class="wallet-amount">₹{total_spent:,.0f}</div>
         <div class="wallet-grid">
             <div>
-                <div class="wallet-sub-title">👩 மனைவி பட்ஜெட் (₹40,000)</div>
-                <div class="wallet-sub-val">₹{wife_spent:,.2f}</div>
+                <div class="wallet-sub-title">👩 Wife Budget (₹40,000)</div>
+                <div class="wallet-sub-val">₹{wife_spent:,.0f}</div>
                 <div class="wallet-bar-track">
-                    <div class="wallet-bar-fill" style="width: {wife_pct}%; background: {fill_color};"></div>
+                    <div class="wallet-bar-fill" style="width: {wife_pct:.1f}%; background: {fill_color};"></div>
                 </div>
-                <div style="font-size:10.5px; color:#cbd5e1; margin-top:4px;">மீதம்: ₹{wife_remaining:,.0f} ({wife_pct:.0f}%)</div>
+                <div style="font-size:10px; color:#cbd5e1; margin-top:4px;">Left: ₹{wife_remaining:,.0f} ({100-wife_pct:.0f}% free)</div>
             </div>
             <div>
-                <div class="wallet-sub-title">💰 சேமிப்பு நிலை (இலக்கு ₹65K)</div>
-                <div class="wallet-sub-val" style="color:#4ade80;">₹{savings_est:,.2f}</div>
-                <div style="font-size:10.5px; color:#cbd5e1; margin-top:12px;">{len(df)} பரிவர்த்தனைகள்</div>
+                <div class="wallet-sub-title">💰 Savings Target (₹65K)</div>
+                <div class="wallet-sub-val" style="color:#4ade80;">₹{savings_est:,.0f}</div>
+                <div style="font-size:10px; color:#cbd5e1; margin-top:12px;">{len(df)} transactions</div>
             </div>
         </div>
     </div>
     """, unsafe_allow_html=True)
         
-    # KASUAI SMART FINANCIAL ADVISOR BUTTON
-    st.write("")
-    if st.button("🤖 KasuAI தமிழ் நிதி ஆலோசகர் அறிக்கை (AI Financial Insights)", use_container_width=True):
+    # AI ADVISOR BUTTON
+    if st.button("🤖 KasuAI — Get Smart Financial Tips", use_container_width=True):
         summary_str = f"Target Month: {target_month}, Total Spent: ₹{total_spent}, Wife Spent: ₹{wife_spent}/₹40000, Projected Savings: ₹{savings_est}."
         if not df.empty:
             cat_breakdown = df.groupby("category")["amount"].sum().to_dict()
@@ -997,99 +992,143 @@ with tab_dash:
         3. A motivating quote/tip to achieve the ₹65,000 savings target.
         Return in clear markdown.
         """
-        with st.spinner("🧠 KasuAI உங்கள் குடும்ப நிதியை அலசுகிறது..."):
+        with st.spinner("🧠 Analyzing your finances..."):
             ai_advice = None
             if gemini_api_key:
                 ai_advice_obj = call_gemini_ai(advice_prompt, gemini_api_key)
                 if ai_advice_obj:
-                    # Direct string or fallback
                     ai_advice = json.dumps(ai_advice_obj, ensure_ascii=False)
             if not ai_advice:
-                # Built-in smart rule advice in Tamil
                 ai_advice = f"""
-                ### 🪙 KasuAI குடும்ப நிதி அறிக்கை ({target_month}):
-                * **👍 சேமிப்பு நிலை:** இதுவரை மொத்த செலவு ₹{total_spent:,.2f}. மாத இலக்கு ₹65,000 சேமிப்பில் இன்னும் **₹{savings_est:,.2f}** சேமிக்க வாய்ப்புள்ளது.
-                * **👩 மனைவி பட்ஜெட்:** ₹40,000 பட்ஜெட்டில் இதுவரை ₹{wife_spent:,.2f} ({wife_pct:.1f}%) செலவாகியுள்ளது. கையில் மீதம் **₹{wife_remaining:,.2f}** உள்ளது.
-                * **💡 சிறு துளி பெருவெள்ளம்:** தினசரி சிறு சில்லறை செலவுகளைக் கண்காணிப்பது மாத இறுதியில் பெரிய சேமிப்பைத் தரும்!
+**KasuAI Financial Report — {target_month}**
+
+✅ **Savings on track:** Total spent ₹{total_spent:,.0f}. Potential savings towards ₹65K goal: **₹{savings_est:,.0f}**
+
+👩 **Wife Budget:** ₹{wife_spent:,.0f} used of ₹40,000 ({wife_pct:.0f}%). Balance remaining: **₹{wife_remaining:,.0f}**
+
+💡 **Tip:** Track even small daily expenses — they add up to big savings at month-end!
                 """
-            st.markdown(f"""
-            <div class="ai-insight-box">
-                {ai_advice}
-            </div>
-            """, unsafe_allow_html=True)
+            st.info(ai_advice)
             
     st.write("")
     
     if not df.empty:
-        summary = df.groupby("category")["amount"].sum().reset_index()
-        
-        st.markdown('<div class="section-title">🍩 துறை வாரியான செலவுப் பகிர்வு</div>', unsafe_allow_html=True)
-        fig = px.pie(
-            summary, values="amount", names="category", hole=0.5,
-            color_discrete_sequence=["#0284c7", "#059669", "#d97706", "#dc2626", "#7c3aed", "#0891b2", "#64748b"]
-        )
-        fig.update_traces(textposition='inside', textinfo='percent+label')
-        fig.update_layout(
-            margin=dict(t=10, b=10, l=10, r=10), 
-            height=260,
-            showlegend=False
-        )
-        st.plotly_chart(fig, use_container_width=True)
-        
-        with st.expander("📊 விரிவான செலவு அட்டவணை"):
-            sum_disp = summary.rename(columns={"category": "பிரிவு", "amount": "தொகை (₹)"}).copy()
-            sum_disp["தொகை (₹)"] = sum_disp["தொகை (₹)"].apply(lambda x: f"₹{x:,.2f}")
-            st.dataframe(sum_disp, use_container_width=True, hide_index=True)
+        summary = df.groupby("category")["amount"].sum().reset_index().sort_values("amount", ascending=False)
+        max_amt = summary["amount"].max() if len(summary) > 0 else 1
+
+        # Category icons map
+        CAT_ICONS = {
+            "மளிகை & உணவு": "🛒", "மளிகை": "🛒",
+            "டீ & சிற்றுண்டி": "☕", "Tea": "☕",
+            "வாகனம் & Fuel": "⛽", "Fuel": "⛽",
+            "மின்சாரக் கட்டணம்": "⚡", "Electricity": "⚡",
+            "கடன்கள் & EMI": "🏦", "EMI": "🏦",
+            "மருத்துவம்": "🏥", "Medical": "🏥",
+            "விவசாயச் செலவு": "🌾", "Farm": "🌾",
+            "இதர செலவுகள்": "📦", "Other": "📦",
+            "வங்கி அறிக்கை": "🏛️",
+        }
+        BAR_COLORS = ["#0284c7", "#059669", "#d97706", "#dc2626", "#7c3aed", "#0891b2", "#64748b", "#db2777"]
+
+        st.markdown('<div class="section-title">📊 Spending by Category</div>', unsafe_allow_html=True)
+        cat_html = '<div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:14px; padding:12px 16px; margin-bottom:12px;">'
+        for idx, row in summary.iterrows():
+            cat = str(row["category"])
+            amt = float(row["amount"])
+            pct = (amt / max_amt) * 100 if max_amt > 0 else 0
+            icon = CAT_ICONS.get(cat, "📌")
+            color = BAR_COLORS[list(summary.index).index(idx) % len(BAR_COLORS)]
+            # Short English label for category
+            short_label = (
+                cat.replace("மளிகை & உணவு", "Grocery & Food")
+                   .replace("டீ & சிற்றுண்டி", "Tea & Snacks")
+                   .replace("வாகனம் & Fuel", "Vehicle & Fuel")
+                   .replace("மின்சாரக் கட்டணம்", "Electricity")
+                   .replace("கடன்கள் & EMI", "Loans & EMI")
+                   .replace("மருத்துவம்", "Medical")
+                   .replace("விவசாயச் செலவு", "Farm Expense")
+                   .replace("இதர செலவுகள்", "Others")
+                   .replace("வங்கி அறிக்கை", "Bank Statement")
+            )
+            cat_html += f"""
+            <div class="cat-row">
+                <div class="cat-icon">{icon}</div>
+                <div class="cat-label">{short_label}</div>
+                <div class="cat-bar-wrap"><div class="cat-bar-fill" style="width:{pct:.1f}%; background:{color};"></div></div>
+                <div class="cat-amount">₹{amt:,.0f}</div>
+            </div>"""
+        cat_html += "</div>"
+        st.markdown(cat_html, unsafe_allow_html=True)
             
         r_head_col1, r_head_col2 = st.columns([3.0, 2.2])
         with r_head_col1:
-            st.markdown('<div class="section-title">📋 சமீபத்திய செலவுகள்</div>', unsafe_allow_html=True)
+            st.markdown('<div class="section-title">📋 Recent Expenses</div>', unsafe_allow_html=True)
         with r_head_col2:
-            if st.button("🧹 நகல்களை நீக்கு", key="clean_dup_dash", help="ஒரே மாதிரியான 2/3 முறை பதிவான செலவுகளை நீக்கு", use_container_width=True):
+            if st.button("🧹 Remove Duplicates", key="clean_dup_dash", help="Remove duplicate entries recorded multiple times", use_container_width=True):
                 del_count = db_clean_duplicate_expenses()
+                st.cache_data.clear()
                 if del_count > 0:
-                    st.success(f"✅ {del_count} நகல் செலவுகள் நீக்கப்பட்டன!")
+                    st.success(f"✅ {del_count} duplicates removed!")
                 else:
-                    st.info("✅ நகல் செலவுகள் எதுவும் இல்லை!")
+                    st.info("✅ No duplicates found!")
                 st.rerun()
+
         recent_df = df.sort_values(by="id", ascending=False)
         for _, r in recent_df.head(15).iterrows():
             d_col1, d_col2 = st.columns([4.2, 1.2])
-            date_disp = str(r['date'])[:16] if pd.notna(r['date']) else ""
-            notes_disp = f" — {str(r['notes'])[:35]}" if pd.notna(r['notes']) and r['notes'] else ""
-            merchant_disp = f"[{r['merchant']}] " if pd.notna(r['merchant']) and r['merchant'] != r['category'] else ""
+            date_disp = str(r['date'])[:10] if pd.notna(r['date']) else ""
+            merchant_raw = str(r['merchant']) if pd.notna(r['merchant']) else ""
+            notes_raw = str(r['notes']) if pd.notna(r['notes']) else ""
+            # Clean up merchant display
+            merchant_disp = merchant_raw if merchant_raw and merchant_raw != str(r['category']) else ""
+            notes_disp = notes_raw[:30] if notes_raw and notes_raw != merchant_raw else ""
+            # Short category label
+            cat_display = (
+                str(r['category'])
+                .replace("மளிகை & உணவு", "Grocery")
+                .replace("டீ & சிற்றுண்டி", "Tea/Snacks")
+                .replace("வாகனம் & Fuel", "Fuel")
+                .replace("மின்சாரக் கட்டணம்", "Electricity")
+                .replace("கடன்கள் & EMI", "Loan/EMI")
+                .replace("மருத்துவம்", "Medical")
+                .replace("விவசாயச் செலவு", "Farm")
+                .replace("இதர செலவுகள்", "Others")
+            )
+            user_short = "Raj" if "Raj" in str(r['user']) or "ராஜ்" in str(r['user']) else "Wife"
             
             with d_col1:
                 st.markdown(f"""
                 <div class="tx-card">
-                    <div>
-                        <span style="font-weight:700; font-size:15px; color:#0f172a;">{r['category']}</span>
-                        <span style="color:#64748b; font-size:13px; margin-left:8px;">{merchant_disp}{notes_disp}</span>
-                        <div style="font-size:12px; color:#94a3b8; margin-top:2px;">{date_disp} • {r['user']}</div>
+                    <div style="flex:1; min-width:0;">
+                        <div style="font-weight:700; font-size:14px; color:#0f172a;">{cat_display}</div>
+                        <div style="font-size:12px; color:#64748b; margin-top:1px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{merchant_disp or notes_disp or "—"}</div>
+                        <div style="font-size:11px; color:#94a3b8; margin-top:2px;">{date_disp} · {user_short}</div>
                     </div>
-                    <div style="font-size:17px; font-weight:800; color:#dc2626;">
-                        ₹{r['amount']:,.2f}
+                    <div style="font-size:16px; font-weight:800; color:#dc2626; white-space:nowrap; margin-left:8px;">
+                        ₹{r['amount']:,.0f}
                     </div>
                 </div>
                 """, unsafe_allow_html=True)
                 
             with d_col2:
-                if st.button("🗑️ நீக்கு", key=f"del_exp_{r['id']}"):
+                if st.button("🗑️", key=f"del_exp_{r['id']}", help="Delete this entry"):
                     db_delete_expense(r['id'])
-                    st.success("நீக்கப்பட்டது!")
+                    st.cache_data.clear()
+                    st.success("Deleted!")
                     st.rerun()
     else:
         st.markdown("""
         <div style="background:#ffffff; border:2px dashed #cbd5e1; border-radius:16px; padding:35px; text-align:center; color:#64748b; margin-top:10px;">
             <div style="font-size:32px; margin-bottom:8px;">📝</div>
-            <div style="font-size:16px; font-weight:700; color:#0f172a;">இந்த மாதத்திற்கான செலவுகள் எதுவும் இன்னும் பதிவாகவில்லை</div>
-            <div style="font-size:13px; margin-top:4px;">மேலே உள்ள '➕ புதிய செலவு' டேப் மூலம் புதிய செலவைச் சேர்க்கவும் அல்லது SMS-ஐ பேஸ்ட் செய்யவும்.</div>
+            <div style="font-size:15px; font-weight:700; color:#0f172a;">No expenses recorded this month</div>
+            <div style="font-size:13px; margin-top:4px;">Tap the ➕ Add Expense tab to log your first entry.</div>
         </div>
         """, unsafe_allow_html=True)
 
+
 # ==================== 2. ADD EXPENSE & SMS DECODER ====================
 with tab_entry:
-    st.markdown('<div class="section-title">⚡ ஒரு க்ளிக் நேரடிச் செலவு (Quick Presets)</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-title">⚡ Quick Add (1-Tap Presets)</div>', unsafe_allow_html=True)
     
     def add_quick_expense(cat, amt, note):
         db_insert_expense(
@@ -1097,53 +1136,51 @@ with tab_entry:
             active_user,
             cat,
             amt,
-            "ரொக்கம் (Cash)",
+            "Cash",
             note,
             note
         )
-        st.success(f"✅ {note} ₹{amt} ({active_user}) கணக்கில் சேர்க்கப்பட்டது!")
+        st.cache_data.clear()
+        st.success(f"✅ {note} ₹{amt} added!")
         st.rerun()
 
     q_r1_c1, q_r1_c2, q_r1_c3 = st.columns(3)
-    if q_r1_c1.button("☕ டீ ₹20", use_container_width=True):
-        add_quick_expense("டீ & சிற்றுண்டி", 20.0, "டீ / காபி")
-    if q_r1_c2.button("🥛 பால் ₹35", use_container_width=True):
-        add_quick_expense("மளிகை & உணவு", 35.0, "பால்")
-    if q_r1_c3.button("🥦 காய் ₹150", use_container_width=True):
-        add_quick_expense("மளிகை & உணவு", 150.0, "காய்கறி")
+    if q_r1_c1.button("☕ Tea ₹20", use_container_width=True):
+        add_quick_expense("டீ & சிற்றுண்டி", 20.0, "Tea/Coffee")
+    if q_r1_c2.button("🥛 Milk ₹35", use_container_width=True):
+        add_quick_expense("மளிகை & உணவு", 35.0, "Milk")
+    if q_r1_c3.button("🥦 Veggies ₹150", use_container_width=True):
+        add_quick_expense("மளிகை & உணவு", 150.0, "Vegetables")
         
     q_r2_c1, q_r2_c2 = st.columns(2)
-    if q_r2_c1.button("⛽ பெட்ரோல் ₹200", use_container_width=True):
-        add_quick_expense("வாகனம் & Fuel", 200.0, "பெட்ரோல்")
-    if q_r2_c2.button("🌾 மளிகை ₹500", use_container_width=True):
-        add_quick_expense("மளிகை & உணவு", 500.0, "மளிகைக் கடை")
+    if q_r2_c1.button("⛽ Petrol ₹200", use_container_width=True):
+        add_quick_expense("வாகனம் & Fuel", 200.0, "Petrol")
+    if q_r2_c2.button("🛒 Grocery ₹500", use_container_width=True):
+        add_quick_expense("மளிகை & உணவு", 500.0, "Grocery Store")
         
     st.write("")
 
-    with st.expander("⚡ Paytm செப்டம்பர் விடுபட்ட செலவுகள் (1-Click Sync)", expanded=False):
+    with st.expander("⚡ Paytm September Missing Expenses (1-Click Sync)", expanded=False):
+        st.caption("Missing September Paytm payments not captured by SMS:")
         st.markdown("""
-        <div style="font-size:13px; color:#334155; margin-bottom:8px;">
-            வங்கி SMS வராமல் Paytm-ல் விடுபட்ட செப்டம்பர் செலவுகள் (உங்கள் பேமெண்ட் வரலாற்றின்படி):
-        </div>
-        """, unsafe_allow_html=True)
-        st.markdown("""
-        * 🏨 **Hotel Annalakshmi Catering Services**: ₹345 *(மளிகை & உணவு)*
-        * 🍞 **Krishna Bakery**: ₹170 *(டீ & சிற்றுண்டி)*
-        * ⛽ **Nishanth Enterprises**: ₹800 *(வாகனம் & Fuel)*
-        * 🛒 **Maheshwari Maligai**: ₹70 *(மளிகை & உணவு)*
+        * 🏨 **Hotel Annalakshmi Catering Services**: ₹345 *(Food)*
+        * 🍞 **Krishna Bakery**: ₹170 *(Tea & Snacks)*
+        * ⛽ **Nishanth Enterprises**: ₹800 *(Fuel)*
+        * 🛒 **Maheshwari Maligai**: ₹70 *(Grocery)*
         """)
-        if st.button("➕ இந்த 4 விடுபட்ட Paytm செலவுகளையும் உடனே சேர் (மொத்தம்: ₹1,385)", key="add_missing_paytm", use_container_width=True):
+        if st.button("➕ Add All 4 Missing Paytm Expenses (Total: ₹1,385)", key="add_missing_paytm", use_container_width=True):
             missing_paytm_items = [
-                ("2026-09-19 19:05:00", "👤 ராஜ்குமார் (கணவர்)", "மளிகை & உணவு", 345.0, "Paytm UPI", "Hotel Annalakshmi Catering Services", "Paytm: Paid ₹345 to Hotel Annalakshmi Catering Services"),
-                ("2026-09-18 15:38:00", "👤 ராஜ்குமார் (கணவர்)", "டீ & சிற்றுண்டி", 170.0, "Paytm UPI", "Krishna Bakery", "Paytm: Paid ₹170 to Krishna Bakery"),
-                ("2026-09-18 11:22:00", "👤 ராஜ்குமார் (கணவர்)", "வாகனம் & Fuel", 800.0, "Paytm UPI", "Nishanth Enterprises", "Paytm: Paid ₹800 to Nishanth Enterprises"),
-                ("2026-09-17 10:15:00", "👤 ராஜ்குமார் (கணவர்)", "மளிகை & உணவு", 70.0, "Paytm UPI", "Maheshwari Maligai", "Paytm: Paid ₹70 to Maheshwari Maligai")
+                ("2026-09-19 19:05:00", "👤 Rajkumar (Husband)", "மளிகை & உணவு", 345.0, "Paytm UPI", "Hotel Annalakshmi Catering Services", "Paytm: Paid ₹345 to Hotel Annalakshmi Catering Services"),
+                ("2026-09-18 15:38:00", "👤 Rajkumar (Husband)", "டீ & சிற்றுண்டி", 170.0, "Paytm UPI", "Krishna Bakery", "Paytm: Paid ₹170 to Krishna Bakery"),
+                ("2026-09-18 11:22:00", "👤 Rajkumar (Husband)", "வாகனம் & Fuel", 800.0, "Paytm UPI", "Nishanth Enterprises", "Paytm: Paid ₹800 to Nishanth Enterprises"),
+                ("2026-09-17 10:15:00", "👤 Rajkumar (Husband)", "மளிகை & உணவு", 70.0, "Paytm UPI", "Maheshwari Maligai", "Paytm: Paid ₹70 to Maheshwari Maligai")
             ]
             added_count = 0
             for itm in missing_paytm_items:
                 if db_insert_expense(itm[0], itm[1], itm[2], itm[3], itm[4], itm[5], itm[6]):
                     added_count += 1
-            st.success(f"✅ விடுபட்ட {added_count} Paytm செலவுகளும் கணக்கில் சேர்க்கப்பட்டன!")
+            st.cache_data.clear()
+            st.success(f"✅ {added_count} missing Paytm expenses added!")
             st.rerun()
 
     st.write("")
@@ -1151,20 +1188,20 @@ with tab_entry:
     st.markdown("""
     <div class="form-box">
         <div style="font-size:15px; font-weight:800; color:#0f172a; margin-bottom:10px;">
-            🧠 1. KasuAI SMS டிகோடர் (பேஸ்ட் செய்யவும்)
+            🧠 1. SMS Decoder — Paste Bank Message
         </div>
     """, unsafe_allow_html=True)
     
     sms_txt = st.text_area(
-        "SMS உரை:", 
-        placeholder="வங்கி மெசேஜ், UPI டெபிட், OTP, அல்லது எச்சரிக்கை செய்தியை இங்கே பேஸ்ட் செய்யவும்...", 
-        height=110,
+        "SMS Text:", 
+        placeholder="Paste bank SMS, UPI debit, or payment notification here...", 
+        height=100,
         label_visibility="collapsed"
     )
     
-    if st.button("🚀 KasuAI மூலம் படித்துப் பதிவு செய்", type="primary", use_container_width=True):
+    if st.button("🚀 Decode SMS & Add Expense", type="primary", use_container_width=True):
         if sms_txt.strip():
-            with st.spinner("KasuAI SMS-ஐப் பகுப்பாய்வு செய்கிறது..."):
+            with st.spinner("🧠 KasuAI analyzing SMS..."):
                 result = parse_sms_with_brain(sms_txt, gemini_api_key)
                 
             if result and result["is_expense"] and result["amount"] > 0:
@@ -1177,11 +1214,12 @@ with tab_entry:
                     result["merchant"],
                     sms_txt
                 )
-                st.success(f"💳 **{result['category']}** செலவு ₹{result['amount']:,.2f} ({result['merchant']}) கணக்கில் சேர்க்கப்பட்டது! [பகுப்பாய்வு: {result['source']}]")
+                st.cache_data.clear()
+                st.success(f"💳 ₹{result['amount']:,.0f} expense added — {result['merchant']} [{result['source']}]")
                 st.rerun()
             else:
-                cat = result["category"] if result else "இதர அறிவிப்பு"
-                explanation = result["explanation"] if result else "தகவல் அறிவிப்பு"
+                cat = result["category"] if result else "Info Alert"
+                explanation = result["explanation"] if result else "Information message"
                 db_insert_alert(
                     datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                     "SMS",
@@ -1192,7 +1230,7 @@ with tab_entry:
                 st.info(f"🔔 **{cat}:** {explanation}")
                 st.rerun()
         else:
-            st.warning("SMS உரையை உள்ளிடவும்!")
+            st.warning("Please paste an SMS message first!")
     st.markdown("</div>", unsafe_allow_html=True)
 
     st.write("")
@@ -1200,27 +1238,28 @@ with tab_entry:
     st.markdown("""
     <div class="form-box">
         <div style="font-size:15px; font-weight:800; color:#0f172a; margin-bottom:10px;">
-            ✍️ 2. கைமுறைப் பதிவு (ரொக்கச் செலவு)
+            ✍️ 2. Manual Entry (Cash / Any Expense)
         </div>
     """, unsafe_allow_html=True)
     
     with st.form("manual_entry_form"):
-        man_amt = st.number_input("தொகை (₹):", min_value=1.0, value=50.0, step=10.0)
-        man_cat = st.selectbox("பிரிவு:", ["மளிகை & உணவு", "டீ & சிற்றுண்டி", "வாகனம் & Fuel", "மின்சாரக் கட்டணம்", "கடன்கள் & EMI", "விவசாயச் செலவு", "மருத்துவம்", "இதர செலவுகள்"])
-        man_mode = st.selectbox("செலுத்திய முறை:", ["ரொக்கம் (Cash)", "PhonePe / GPay", "வங்கி கணக்கு"])
-        man_notes = st.text_input("குறிப்பு (எ.கா: காய்கறி, டீ, மளிகை):", "")
+        man_amt = st.number_input("Amount (₹):", min_value=1.0, value=50.0, step=10.0)
+        man_cat = st.selectbox("Category:", ["மளிகை & உணவு", "டீ & சிற்றுண்டி", "வாகனம் & Fuel", "மின்சாரக் கட்டணம்", "கடன்கள் & EMI", "விவசாயச் செலவு", "மருத்துவம்", "இதர செலவுகள்"])
+        man_mode = st.selectbox("Payment Mode:", ["Cash", "PhonePe / GPay", "Bank Transfer", "Paytm UPI"])
+        man_notes = st.text_input("Note (e.g: Vegetables, Tea, Grocery):", "")
         
-        if st.form_submit_button("➕ செலவைச் சேமிக்கவும்", type="primary", use_container_width=True):
+        if st.form_submit_button("➕ Save Expense", type="primary", use_container_width=True):
             db_insert_expense(
                 datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                 active_user,
                 man_cat,
                 man_amt,
                 man_mode,
-                man_notes or "நேரடிப் பதிவு",
+                man_notes or "Manual Entry",
                 man_notes
             )
-            st.success(f"✅ ₹{man_amt:,.2f} ({man_cat}) பதிவானது!")
+            st.cache_data.clear()
+            st.success(f"✅ ₹{man_amt:,.0f} ({man_cat}) saved!")
             st.rerun()
     st.markdown("</div>", unsafe_allow_html=True)
 
