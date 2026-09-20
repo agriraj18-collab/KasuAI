@@ -326,7 +326,20 @@ st.markdown("""
     .cat-bar-fill { height: 100%; border-radius: 6px; }
     .cat-amount { font-size: 13px; font-weight: 800; color: #0f172a; min-width: 60px; text-align: right; flex-shrink: 0; }
 
-    /* 10. KILL ALL STREAMLIT WHITESPACE */
+    /* 10. DATE-WISE EXPENSE ACCORDION & ROWS */
+    .day-item-card {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 9px 12px;
+        margin-bottom: 4px;
+        display: flex;
+        align-items: center;
+        width: 100%;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+    }
+
+    /* 11. KILL ALL STREAMLIT WHITESPACE */
 
     /* A. Tab panel top padding — Streamlit default is 1rem, we kill it */
     [data-baseweb="tab-panel"] {
@@ -375,18 +388,26 @@ st.markdown("""
         margin-top: 0 !important;
     }
 
-    /* G. Expander padding */
+    /* G. Expander styling */
+    [data-testid="stExpander"] {
+        margin-bottom: 6px !important;
+    }
     [data-testid="stExpander"] details {
         border: 1px solid #e2e8f0 !important;
         border-radius: 12px !important;
+        background: #ffffff !important;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.03) !important;
     }
     [data-testid="stExpander"] details summary {
         padding: 10px 14px !important;
-        font-weight: 600 !important;
-        font-size: 13px !important;
+        font-weight: 700 !important;
+        font-size: 13.5px !important;
+        color: #0f172a !important;
+        background: #ffffff !important;
+        border-radius: 12px !important;
     }
     [data-testid="stExpander"] details div[data-testid="stVerticalBlock"] {
-        padding: 0 14px 10px 14px !important;
+        padding: 6px 12px 10px 12px !important;
     }
 
     /* H. Radio group bottom margin — tighter */
@@ -1166,7 +1187,7 @@ with tab_dash:
             
         r_head_col1, r_head_col2 = st.columns([3.0, 2.2])
         with r_head_col1:
-            st.markdown('<div class="section-title">📋 Recent Expenses</div>', unsafe_allow_html=True)
+            st.markdown('<div class="section-title">📅 Daily Expenses</div>', unsafe_allow_html=True)
         with r_head_col2:
             if st.button("🧹 Remove Duplicates", key="clean_dup_dash", help="Remove duplicate entries recorded multiple times", use_container_width=True):
                 del_count = db_clean_duplicate_expenses()
@@ -1177,49 +1198,80 @@ with tab_dash:
                     st.info("✅ No duplicates found!")
                 st.rerun()
 
-        recent_df = df.sort_values(by="id", ascending=False)
-        for _, r in recent_df.head(15).iterrows():
-            date_disp = str(r['date'])[:10] if pd.notna(r['date']) else ""
-            merchant_raw = str(r['merchant']) if pd.notna(r['merchant']) else ""
-            notes_raw = str(r['notes']) if pd.notna(r['notes']) else ""
-            # Clean up merchant display
-            merchant_disp = merchant_raw if merchant_raw and merchant_raw != str(r['category']) else ""
-            notes_disp = notes_raw[:30] if notes_raw and notes_raw != merchant_raw else ""
-            # Short category label
-            cat_display = (
-                str(r['category'])
-                .replace("மளிகை & உணவு", "Grocery")
-                .replace("டீ & சிற்றுண்டி", "Tea/Snacks")
-                .replace("வாகனம் & Fuel", "Fuel")
-                .replace("மின்சாரக் கட்டணம்", "Electricity")
-                .replace("கடன்கள் & EMI", "Loan/EMI")
-                .replace("மருத்துவம்", "Medical")
-                .replace("விவசாயச் செலவு", "Farm")
-                .replace("இதர செலவுகள்", "Others")
-            )
-            user_short = "Raj" if "Raj" in str(r['user']) or "ராஜ்" in str(r['user']) else "Wife"
+        recent_df = df.copy()
+        if not recent_df.empty:
+            recent_df['dt'] = pd.to_datetime(recent_df['date'], errors='coerce')
+            recent_df['date_only'] = recent_df['dt'].dt.strftime('%Y-%m-%d')
+            today_str = datetime.now().strftime('%Y-%m-%d')
+            yesterday_str = (datetime.now() - pd.Timedelta(days=1)).strftime('%Y-%m-%d')
             
-            # Single-column layout — no column split (prevents mobile stacking)
-            st.markdown(f"""
-            <div class="tx-card" id="card_{r['id']}">
-                <div style="flex:1; min-width:0;">
-                    <div style="font-weight:700; font-size:14px; color:#0f172a;">{cat_display}</div>
-                    <div style="font-size:12px; color:#64748b; margin-top:1px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{merchant_disp or notes_disp or "—"}</div>
-                    <div style="font-size:11px; color:#94a3b8; margin-top:2px;">{date_disp} · {user_short}</div>
-                </div>
-                <div style="display:flex; align-items:center; gap:10px; flex-shrink:0;">
-                    <div style="font-size:16px; font-weight:800; color:#dc2626; white-space:nowrap;">₹{r['amount']:,.0f}</div>
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
+            unique_dates = sorted(recent_df['date_only'].dropna().unique(), reverse=True)
             
-            btn_col, _ = st.columns([1, 5])
-            with btn_col:
-                if st.button("🗑️ Delete", key=f"del_exp_{r['id']}", help="Delete this entry", use_container_width=True):
-                    db_delete_expense(r['id'])
-                    st.cache_data.clear()
-                    st.success("Deleted!")
-                    st.rerun()
+            for idx, d_str in enumerate(unique_dates):
+                day_df = recent_df[recent_df['date_only'] == d_str].sort_values(by="id", ascending=False)
+                day_total = day_df['amount'].sum()
+                day_count = len(day_df)
+                
+                try:
+                    d_obj = datetime.strptime(d_str, "%Y-%m-%d")
+                    date_formatted = d_obj.strftime("%d %b %Y (%a)")
+                    day_short = d_obj.strftime("%d %b")
+                except:
+                    date_formatted = d_str
+                    day_short = d_str
+                
+                count_lbl = f"{day_count} {'entry' if day_count == 1 else 'entries'}"
+                if d_str == today_str:
+                    header_label = f"📅 Today ({day_short})   •   ₹{day_total:,.0f}   ({count_lbl})"
+                elif d_str == yesterday_str:
+                    header_label = f"📅 Yesterday ({day_short})   •   ₹{day_total:,.0f}   ({count_lbl})"
+                else:
+                    header_label = f"📅 {date_formatted}   •   ₹{day_total:,.0f}   ({count_lbl})"
+                
+                with st.expander(header_label, expanded=(idx == 0)):
+                    for _, r in day_df.iterrows():
+                        merchant_raw = str(r['merchant']) if pd.notna(r['merchant']) else ""
+                        notes_raw = str(r['notes']) if pd.notna(r['notes']) else ""
+                        merchant_disp = merchant_raw if merchant_raw and merchant_raw != str(r['category']) else ""
+                        notes_disp = notes_raw[:30] if notes_raw and notes_raw != merchant_raw else ""
+                        
+                        cat_name = str(r['category'])
+                        cat_icon = CAT_ICONS.get(cat_name, "📌")
+                        cat_display = (
+                            cat_name
+                            .replace("மளிகை & உணவு", "Grocery")
+                            .replace("டீ & சிற்றுண்டி", "Tea/Snacks")
+                            .replace("வாகனம் & Fuel", "Fuel")
+                            .replace("மின்சாரக் கட்டணம்", "Electricity")
+                            .replace("கடன்கள் & EMI", "Loan/EMI")
+                            .replace("மருத்துவம்", "Medical")
+                            .replace("விவசாயச் செலவு", "Farm")
+                            .replace("இதர செலவுகள்", "Others")
+                        )
+                        user_short = "Raj" if "Raj" in str(r['user']) or "ராஜ்" in str(r['user']) else "Wife"
+                        time_disp = str(r['date'])[11:16] if pd.notna(r['date']) and len(str(r['date'])) >= 16 else ""
+                        time_str = f"{time_disp} · " if time_disp else ""
+                        
+                        t_col1, t_col2 = st.columns([4.4, 1.0])
+                        with t_col1:
+                            st.markdown(f"""
+                            <div class="day-item-card">
+                                <div style="font-size:18px; margin-right:8px; line-height:1;">{cat_icon}</div>
+                                <div style="flex:1; min-width:0;">
+                                    <div style="font-weight:700; font-size:13.5px; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{merchant_disp or cat_display}</div>
+                                    <div style="font-size:11.5px; color:#64748b; margin-top:1px;">{cat_display} · {time_str}{user_short}</div>
+                                </div>
+                                <div style="font-size:15px; font-weight:800; color:#dc2626; white-space:nowrap; margin-left:8px;">
+                                    ₹{r['amount']:,.0f}
+                                </div>
+                            </div>
+                            """, unsafe_allow_html=True)
+                        with t_col2:
+                            if st.button("🗑️", key=f"del_exp_{r['id']}", help="Delete this entry"):
+                                db_delete_expense(r['id'])
+                                st.cache_data.clear()
+                                st.success("Deleted!")
+                                st.rerun()
     else:
         st.markdown("""
         <div style="background:#ffffff; border:2px dashed #cbd5e1; border-radius:16px; padding:20px 16px; text-align:center; color:#64748b; margin-top:6px;">
