@@ -45,8 +45,8 @@ st.markdown("""
     /* 2. MOBILE CONTAINER */
     .block-container {
         max-width: 560px !important;
-        padding-top: 0.5rem !important;
-        padding-bottom: 4rem !important;
+        padding-top: 0.25rem !important;
+        padding-bottom: 2rem !important;
         padding-left: 0.75rem !important;
         padding-right: 0.75rem !important;
         margin: 0 auto !important;
@@ -64,7 +64,7 @@ st.markdown("""
         background: #ffffff;
         border-radius: 16px;
         padding: 12px 16px;
-        margin-bottom: 10px;
+        margin-bottom: 6px;
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -235,7 +235,7 @@ st.markdown("""
         scrollbar-width: none !important;
         -webkit-overflow-scrolling: touch !important;
         gap: 6px !important;
-        padding: 4px 2px 10px 2px !important;
+        padding: 2px 2px 6px 2px !important;
         border-bottom: none !important;
     }
     .stTabs [data-baseweb="tab-list"]::-webkit-scrollbar { display: none !important; }
@@ -285,8 +285,8 @@ st.markdown("""
         font-size: 15px;
         font-weight: 800;
         color: #0f172a;
-        margin-top: 14px;
-        margin-bottom: 8px;
+        margin-top: 8px;
+        margin-bottom: 6px;
         display: flex;
         align-items: center;
         gap: 6px;
@@ -320,6 +320,23 @@ st.markdown("""
     .cat-bar-wrap { flex: 2; background: #f1f5f9; border-radius: 6px; height: 8px; overflow: hidden; min-width: 60px; }
     .cat-bar-fill { height: 100%; border-radius: 6px; }
     .cat-amount { font-size: 13px; font-weight: 800; color: #0f172a; min-width: 60px; text-align: right; flex-shrink: 0; }
+
+    /* 10. KILL EXTRA STREAMLIT WHITESPACE */
+    [data-testid="stVerticalBlock"] > [data-testid="stVerticalBlock"] {
+        gap: 0.4rem !important;
+    }
+    [data-testid="stVerticalBlock"] {
+        gap: 0.4rem !important;
+    }
+    div[data-testid="stMarkdownContainer"] p {
+        margin-bottom: 0 !important;
+    }
+    [data-testid="stSelectbox"] { margin-bottom: 0 !important; }
+    [data-testid="stNumberInput"] { margin-bottom: 0 !important; }
+    [data-testid="stTextInput"] { margin-bottom: 0 !important; }
+    [data-testid="stTextArea"] { margin-bottom: 0 !important; }
+    [data-testid="stForm"] { border: none !important; padding: 0 !important; background: transparent !important; }
+    [data-testid="column"] { gap: 0 !important; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -894,22 +911,22 @@ active_user = st.radio(
 # --- GEMINI API KEY SETUP IN SIDEBAR ---
 gemini_api_key = os.getenv("GEMINI_API_KEY", "")
 with st.sidebar:
-    st.header("⚙️ KasuAI அமைப்புகள்")
+    st.markdown("### ⚙️ KasuAI Settings")
     
     st.markdown("""
-    <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:12px; margin-bottom:12px;">
-        <div style="font-size:12px; font-weight:700; color:#0369a1;">☁️ CLOUD DATABASE</div>
-        <div style="font-size:14px; font-weight:800; color:#0f172a; margin-top:2px;">Supabase PostgreSQL</div>
-        <div style="font-size:12px; color:#16a34a; font-weight:700; margin-top:4px;">🟢 24/7 Real-Time Sync Active</div>
+    <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:10px; padding:10px 12px; margin-bottom:10px;">
+        <div style="font-size:11px; font-weight:700; color:#15803d;">☁️ CLOUD DATABASE</div>
+        <div style="font-size:13px; font-weight:800; color:#0f172a; margin-top:2px;">Supabase PostgreSQL</div>
+        <div style="font-size:11px; color:#16a34a; font-weight:600; margin-top:3px;">🟢 Real-Time Sync Active</div>
     </div>
     """, unsafe_allow_html=True)
     
-    user_key = st.text_input("🔑 Google Gemini API Key (இலவசம்):", value=gemini_api_key, type="password", placeholder="AIzaSy...")
+    user_key = st.text_input("🔑 Gemini API Key (Free):", value=gemini_api_key, type="password", placeholder="AIzaSy...")
     if user_key:
         gemini_api_key = user_key
-        st.success("🤖 KasuAI AI மூளை தயார்!")
+        st.success("🤖 AI Brain ready!")
     else:
-        st.info("💡 இலவச Gemini API Key சேர்த்தால் அதிவேக AI புரிதல் செயல்படும்.")
+        st.caption("Add a free Gemini API key for smart SMS parsing & financial tips.")
 
 # --- CLEAN TABS WITH BOLD LABELS ---
 tab_dash, tab_entry, tab_loans, tab_history, tab_upload, tab_alerts = st.tabs([
@@ -1010,7 +1027,6 @@ with tab_dash:
                 """
             st.info(ai_advice)
             
-    st.write("")
     
     if not df.empty:
         summary = df.groupby("category")["amount"].sum().reset_index().sort_values("amount", ascending=False)
@@ -1158,7 +1174,6 @@ with tab_entry:
     if q_r2_c2.button("🛒 Grocery ₹500", use_container_width=True):
         add_quick_expense("மளிகை & உணவு", 500.0, "Grocery Store")
         
-    st.write("")
 
     with st.expander("⚡ Paytm September Missing Expenses (1-Click Sync)", expanded=False):
         st.caption("Missing September Paytm payments not captured by SMS:")
@@ -1183,7 +1198,6 @@ with tab_entry:
             st.success(f"✅ {added_count} missing Paytm expenses added!")
             st.rerun()
 
-    st.write("")
     
     st.markdown("""
     <div class="form-box">
@@ -1233,7 +1247,6 @@ with tab_entry:
             st.warning("Please paste an SMS message first!")
     st.markdown("</div>", unsafe_allow_html=True)
 
-    st.write("")
 
     st.markdown("""
     <div class="form-box">
@@ -1472,7 +1485,6 @@ with tab_upload:
             except Exception as e:
                 st.error(f"பிழை: {e}")
 
-    st.write("")
     st.markdown('<div class="section-title">📱 Paytm / UPI / SMS உரை மொத்தப் பதிவு</div>', unsafe_allow_html=True)
     st.caption("Paytm அல்லது UPI வரலாற்றை காப்பி செய்து இங்கே பேஸ்ட் செய்தால் தானாகப் பிரித்தெடுத்துப் பதிவு செய்யும்.")
     bulk_txt = st.text_area(
