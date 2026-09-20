@@ -51,9 +51,8 @@ class MainActivity : AppCompatActivity() {
         checkAndRequestPermissions()
         setupWebView()
 
-        swipeRefresh.setOnRefreshListener {
-            webView.reload()
-        }
+        // Disable pull-to-refresh to allow 100% smooth scrolling without accidental page reload
+        swipeRefresh.isEnabled = false
 
         fabSettings.setOnClickListener {
             showProfileSettingsDialog()
@@ -151,6 +150,12 @@ class MainActivity : AppCompatActivity() {
 
         btnNotification.setOnClickListener {
             startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS))
+        }
+
+        val btnReloadWeb = dialogView.findViewById<Button>(R.id.btnReloadWeb)
+        btnReloadWeb.setOnClickListener {
+            webView.reload()
+            Toast.makeText(this, "🔄 KasuAI புதுப்பிக்கப்படுகிறது...", Toast.LENGTH_SHORT).show()
         }
 
         inputUrl.setText(currentUrl)

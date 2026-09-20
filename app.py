@@ -52,6 +52,11 @@ st.markdown("""
         margin: 0 auto !important;
     }
 
+    html, body, [data-testid="stAppViewContainer"], section.main {
+        overscroll-behavior-y: contain !important;
+        overscroll-behavior: contain !important;
+    }
+
     body, [class*="css"] {
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
         background-color: #f1f5f9 !important;
@@ -1029,11 +1034,15 @@ with tab_dash:
         unique_months = [m for m in unique_months if m != current_m]
         available_months += unique_months
         
-    m_col1, m_col2 = st.columns([1.8, 1.2])
+    m_col1, m_col2, m_col3 = st.columns([1.7, 1.0, 0.4])
     with m_col1:
         selected_view = st.selectbox("Month:", available_months, label_visibility="collapsed")
     with m_col2:
-        st.markdown(f"<div style='text-align:right; font-size:12px; font-weight:700; color:#64748b; padding-top:4px;'>📅 {datetime.now().strftime('%d-%b-%Y')}</div>", unsafe_allow_html=True)
+        st.markdown(f"<div style='text-align:right; font-size:11px; font-weight:700; color:#64748b; padding-top:6px;'>📅 {datetime.now().strftime('%d-%b')}</div>", unsafe_allow_html=True)
+    with m_col3:
+        if st.button("🔄", key="top_reload_btn", help="Refresh data"):
+            st.cache_data.clear()
+            st.rerun()
     
     target_month = current_m if selected_view == "This Month (Current)" else selected_view
     df = all_df[all_df['month_year'] == target_month] if not all_df.empty and 'month_year' in all_df else pd.DataFrame()

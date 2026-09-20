@@ -78,4 +78,12 @@
         android:textSize="13sp"
         android:layout_marginTop="6dp" />
 
+    <Button
+        android:id="@+id/btnReloadWeb"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="🔄 செயலியைப் புதுப்பி (Refresh Web)"
+        android:textSize="13sp"
+        android:layout_marginTop="6dp" />
+
 </LinearLayout>
