@@ -321,22 +321,101 @@ st.markdown("""
     .cat-bar-fill { height: 100%; border-radius: 6px; }
     .cat-amount { font-size: 13px; font-weight: 800; color: #0f172a; min-width: 60px; text-align: right; flex-shrink: 0; }
 
-    /* 10. KILL EXTRA STREAMLIT WHITESPACE */
-    [data-testid="stVerticalBlock"] > [data-testid="stVerticalBlock"] {
-        gap: 0.4rem !important;
+    /* 10. KILL ALL STREAMLIT WHITESPACE */
+
+    /* A. Tab panel top padding — Streamlit default is 1rem, we kill it */
+    [data-baseweb="tab-panel"] {
+        padding-top: 0.3rem !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
     }
+
+    /* B. Vertical block gap — tightest safe value */
     [data-testid="stVerticalBlock"] {
+        gap: 0.35rem !important;
+    }
+    [data-testid="stVerticalBlock"] > [data-testid="stVerticalBlock"] {
+        gap: 0.35rem !important;
+    }
+
+    /* C. Columns gap */
+    [data-testid="stColumns"] {
         gap: 0.4rem !important;
     }
-    div[data-testid="stMarkdownContainer"] p {
+    [data-testid="column"] {
+        gap: 0 !important;
+        padding: 0 !important;
+    }
+
+    /* D. Form inputs — no bottom margin */
+    [data-testid="stSelectbox"],
+    [data-testid="stNumberInput"],
+    [data-testid="stTextInput"],
+    [data-testid="stTextArea"],
+    [data-testid="stRadio"],
+    [data-testid="stButton"] {
         margin-bottom: 0 !important;
     }
-    [data-testid="stSelectbox"] { margin-bottom: 0 !important; }
-    [data-testid="stNumberInput"] { margin-bottom: 0 !important; }
-    [data-testid="stTextInput"] { margin-bottom: 0 !important; }
-    [data-testid="stTextArea"] { margin-bottom: 0 !important; }
-    [data-testid="stForm"] { border: none !important; padding: 0 !important; background: transparent !important; }
-    [data-testid="column"] { gap: 0 !important; }
+
+    /* E. Form container — no border/padding/bg */
+    [data-testid="stForm"] {
+        border: none !important;
+        padding: 0 !important;
+        background: transparent !important;
+    }
+
+    /* F. Paragraph margins */
+    div[data-testid="stMarkdownContainer"] p {
+        margin-bottom: 0 !important;
+        margin-top: 0 !important;
+    }
+
+    /* G. Expander padding */
+    [data-testid="stExpander"] details {
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 12px !important;
+    }
+    [data-testid="stExpander"] details summary {
+        padding: 10px 14px !important;
+        font-weight: 600 !important;
+        font-size: 13px !important;
+    }
+    [data-testid="stExpander"] details div[data-testid="stVerticalBlock"] {
+        padding: 0 14px 10px 14px !important;
+    }
+
+    /* H. Radio group bottom margin — tighter */
+    div[data-testid="stRadio"] div[role="radiogroup"] {
+        margin-bottom: 6px !important;
+    }
+
+    /* I. Selectbox collapsed label height */
+    [data-testid="stSelectbox"] > label[data-testid="stWidgetLabel"] {
+        display: none !important;
+        height: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    [data-testid="stNumberInput"] > label[data-testid="stWidgetLabel"],
+    [data-testid="stTextInput"] > label[data-testid="stWidgetLabel"],
+    [data-testid="stTextArea"] > label[data-testid="stWidgetLabel"] {
+        font-size: 12px !important;
+        font-weight: 600 !important;
+        margin-bottom: 2px !important;
+        color: #475569 !important;
+    }
+
+    /* J. Caption / st.caption spacing */
+    [data-testid="stCaptionContainer"] {
+        margin-top: 0 !important;
+        margin-bottom: 2px !important;
+    }
+
+    /* K. Success/info/warning alert padding */
+    [data-testid="stAlert"] {
+        padding: 8px 12px !important;
+        margin: 4px 0 !important;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -943,7 +1022,7 @@ with tab_dash:
     all_df = db_get_expenses()
     
     current_m = datetime.now().strftime("%Y-%m")
-    available_months = ["இந்த மாதம் (நடப்பு மாதம்)"]
+    available_months = ["This Month (Current)"]
     if not all_df.empty:
         all_df['month_year'] = pd.to_datetime(all_df['date'], errors='coerce').dt.strftime('%Y-%m')
         unique_months = sorted([m for m in all_df['month_year'].dropna().unique() if str(m).startswith('202')], reverse=True)
@@ -952,11 +1031,11 @@ with tab_dash:
         
     m_col1, m_col2 = st.columns([1.8, 1.2])
     with m_col1:
-        selected_view = st.selectbox("📅 கணக்கு மாதம்:", available_months, label_visibility="collapsed")
+        selected_view = st.selectbox("Month:", available_months, label_visibility="collapsed")
     with m_col2:
-        st.markdown(f"<div style='text-align:right; font-size:12px; font-weight:700; color:#64748b; padding-top:8px;'>📅 {datetime.now().strftime('%d-%b-%Y')}</div>", unsafe_allow_html=True)
+        st.markdown(f"<div style='text-align:right; font-size:12px; font-weight:700; color:#64748b; padding-top:4px;'>📅 {datetime.now().strftime('%d-%b-%Y')}</div>", unsafe_allow_html=True)
     
-    target_month = current_m if selected_view == "இந்த மாதம் (நடப்பு மாதம்)" else selected_view
+    target_month = current_m if selected_view == "This Month (Current)" else selected_view
     df = all_df[all_df['month_year'] == target_month] if not all_df.empty and 'month_year' in all_df else pd.DataFrame()
     
     total_spent = df['amount'].sum() if not df.empty else 0.0
@@ -1134,7 +1213,7 @@ with tab_dash:
                     st.rerun()
     else:
         st.markdown("""
-        <div style="background:#ffffff; border:2px dashed #cbd5e1; border-radius:16px; padding:35px; text-align:center; color:#64748b; margin-top:10px;">
+        <div style="background:#ffffff; border:2px dashed #cbd5e1; border-radius:16px; padding:20px 16px; text-align:center; color:#64748b; margin-top:6px;">
             <div style="font-size:32px; margin-bottom:8px;">📝</div>
             <div style="font-size:15px; font-weight:700; color:#0f172a;">No expenses recorded this month</div>
             <div style="font-size:13px; margin-top:4px;">Tap the ➕ Add Expense tab to log your first entry.</div>
@@ -1337,7 +1416,7 @@ with tab_loans:
                         st.rerun()
         else:
             st.markdown("""
-            <div style="background:#ffffff; border:2px dashed #cbd5e1; border-radius:14px; padding:30px; text-align:center; color:#64748b;">
+            <div style="background:#ffffff; border:2px dashed #cbd5e1; border-radius:14px; padding:18px 16px; text-align:center; color:#64748b;">
                 தற்போது கடன்கள் எதுவும் பதிவு செய்யப்படவில்லை.<br>புதிய கடனைச் சேர்க்க இடதுபுறப் படிவத்தைப் பயன்படுத்தவும்.
             </div>
             """, unsafe_allow_html=True)
@@ -1544,7 +1623,7 @@ with tab_alerts:
                     st.rerun()
     else:
         st.markdown("""
-        <div style="background:#ffffff; border:2px dashed #cbd5e1; border-radius:14px; padding:30px; text-align:center; color:#64748b;">
+        <div style="background:#ffffff; border:2px dashed #cbd5e1; border-radius:14px; padding:18px 16px; text-align:center; color:#64748b;">
             இதர எச்சரிக்கைகள் (OTP, Mandate, Stock tips) எதுவும் இல்லை.
         </div>
         """, unsafe_allow_html=True)
