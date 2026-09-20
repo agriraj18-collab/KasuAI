@@ -1170,7 +1170,6 @@ with tab_dash:
 
         recent_df = df.sort_values(by="id", ascending=False)
         for _, r in recent_df.head(15).iterrows():
-            d_col1, d_col2 = st.columns([4.2, 1.2])
             date_disp = str(r['date'])[:10] if pd.notna(r['date']) else ""
             merchant_raw = str(r['merchant']) if pd.notna(r['merchant']) else ""
             notes_raw = str(r['notes']) if pd.notna(r['notes']) else ""
@@ -1191,22 +1190,23 @@ with tab_dash:
             )
             user_short = "Raj" if "Raj" in str(r['user']) or "ராஜ்" in str(r['user']) else "Wife"
             
-            with d_col1:
-                st.markdown(f"""
-                <div class="tx-card">
-                    <div style="flex:1; min-width:0;">
-                        <div style="font-weight:700; font-size:14px; color:#0f172a;">{cat_display}</div>
-                        <div style="font-size:12px; color:#64748b; margin-top:1px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{merchant_disp or notes_disp or "—"}</div>
-                        <div style="font-size:11px; color:#94a3b8; margin-top:2px;">{date_disp} · {user_short}</div>
-                    </div>
-                    <div style="font-size:16px; font-weight:800; color:#dc2626; white-space:nowrap; margin-left:8px;">
-                        ₹{r['amount']:,.0f}
-                    </div>
+            # Single-column layout — no column split (prevents mobile stacking)
+            st.markdown(f"""
+            <div class="tx-card" id="card_{r['id']}">
+                <div style="flex:1; min-width:0;">
+                    <div style="font-weight:700; font-size:14px; color:#0f172a;">{cat_display}</div>
+                    <div style="font-size:12px; color:#64748b; margin-top:1px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{merchant_disp or notes_disp or "—"}</div>
+                    <div style="font-size:11px; color:#94a3b8; margin-top:2px;">{date_disp} · {user_short}</div>
                 </div>
-                """, unsafe_allow_html=True)
-                
-            with d_col2:
-                if st.button("🗑️", key=f"del_exp_{r['id']}", help="Delete this entry"):
+                <div style="display:flex; align-items:center; gap:10px; flex-shrink:0;">
+                    <div style="font-size:16px; font-weight:800; color:#dc2626; white-space:nowrap;">₹{r['amount']:,.0f}</div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            btn_col, _ = st.columns([1, 5])
+            with btn_col:
+                if st.button("🗑️ Delete", key=f"del_exp_{r['id']}", help="Delete this entry", use_container_width=True):
                     db_delete_expense(r['id'])
                     st.cache_data.clear()
                     st.success("Deleted!")
