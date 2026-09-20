@@ -10,6 +10,7 @@ import android.provider.Telephony
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.work.Constraints
+import androidx.work.ExistingWorkPolicy
 import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
@@ -25,6 +26,8 @@ class SmsReceiver : BroadcastReceiver() {
             "upi", "inr", "rs.", "rs ", "₹", "bank", "otp", 
             "mandate", "a/c", "acct", "autopay"
         )
+        private var lastReceivedHash: Int = 0
+        private var lastReceivedTime: Long = 0L
     }
 
     override fun onReceive(context: Context, intent: Intent) {
@@ -35,6 +38,19 @@ class SmsReceiver : BroadcastReceiver() {
             val sender = messages[0].originatingAddress ?: "Unknown"
             val fullBody = messages.joinToString(separator = "") { it.messageBody ?: "" }
 
+            if (fullBody.isBlank()) return
+
+            val now = System.currentTimeMillis()
+            val msgHash = fullBody.hashCode()
+
+            // Skip exact duplicate SMS broadcasts within 30 seconds
+            if (msgHash == lastReceivedHash && (now - lastReceivedTime) < 30_000L) {
+                Log.d(TAG, "Duplicate SMS broadcast ignored (hash: $msgHash)")
+                return
+            }
+            lastReceivedHash = msgHash
+            lastReceivedTime = now
+
             Log.d(TAG, "Incoming SMS from $sender: $fullBody")
 
             val lower = fullBody.lowercase()
@@ -43,7 +59,6 @@ class SmsReceiver : BroadcastReceiver() {
             if (isFinancial) {
                 Log.d(TAG, "Financial SMS detected! Scheduling KasuAI background sync...")
 
-                // Schedule background sync worker
                 val workData = workDataOf(
                     "sender" to sender,
                     "message" to fullBody
@@ -58,7 +73,13 @@ class SmsReceiver : BroadcastReceiver() {
                     .setInputData(workData)
                     .build()
 
-                WorkManager.getInstance(context).enqueue(syncRequest)
+                // Enqueue unique work to avoid duplicate runs
+                val uniqueWorkName = "sms_sync_${Math.abs(msgHash)}"
+                WorkManager.getInstance(context).enqueueUniqueWork(
+                    uniqueWorkName,
+                    ExistingWorkPolicy.KEEP,
+                    syncRequest
+                )
 
                 // Show local status bar notification with parsed details
                 val parsed = SmsParser.parse(fullBody)

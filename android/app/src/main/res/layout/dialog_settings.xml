@@ -47,9 +47,35 @@
         android:id="@+id/editServerUrl"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="http://192.168.1.5:8501 அல்லது Cloud URL"
+        android:hint="https://kasuai-app.streamlit.app"
         android:inputType="textUri"
         android:textSize="14sp"
         android:layout_marginTop="4dp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="🔔 Paytm &amp; UPI தானியங்கி கண்காணிப்பு:"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:textColor="#0f172a"
+        android:layout_marginTop="16dp" />
+
+    <TextView
+        android:id="@+id/textNotificationStatus"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="நிலை: சரிபார்க்கப்படுகிறது..."
+        android:textSize="12sp"
+        android:textColor="#64748b"
+        android:layout_marginTop="2dp" />
+
+    <Button
+        android:id="@+id/btnNotificationAccess"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="🔔 Notification Access அனுமதி வழங்கு / மாற்று"
+        android:textSize="13sp"
+        android:layout_marginTop="6dp" />
 
 </LinearLayout>

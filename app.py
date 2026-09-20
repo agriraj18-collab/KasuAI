@@ -415,8 +415,65 @@ def db_get_expenses():
     conn.close()
     return df
 
+def is_duplicate_expense(date_str, user, amount, notes):
+    """Checks if an identical or near-simultaneous expense exists in Supabase or SQLite."""
+    try:
+        req_amount = float(amount)
+    except Exception:
+        return False
+
+    # 1. Check Cloud Supabase
+    if SUPABASE_URL and SUPABASE_KEY:
+        try:
+            url = f"{SUPABASE_URL}/rest/v1/expenses?amount=eq.{req_amount}&order=id.desc&limit=5"
+            resp = requests.get(url, headers=get_supabase_headers(), timeout=4)
+            if resp.status_code == 200:
+                rows = resp.json()
+                for row in rows:
+                    if str(row.get("user", "")).strip() != str(user).strip():
+                        continue
+                    # Exact notes match
+                    if notes and row.get("notes") and str(row.get("notes")).strip() == str(notes).strip():
+                        return True
+                    # Within 10 minutes time window
+                    row_date = str(row.get("date", ""))
+                    try:
+                        t1 = datetime.strptime(str(date_str)[:19], "%Y-%m-%d %H:%M:%S")
+                        t2 = datetime.strptime(row_date[:19], "%Y-%m-%d %H:%M:%S")
+                        if abs((t1 - t2).total_seconds()) < 600:
+                            return True
+                    except Exception:
+                        pass
+        except Exception:
+            pass
+
+    # 2. Check Local SQLite
+    try:
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute("SELECT id, date, notes FROM expenses WHERE user = ? AND amount = ? ORDER BY id DESC LIMIT 5", (str(user), req_amount))
+        rows = cursor.fetchall()
+        conn.close()
+        for row in rows:
+            if notes and row[2] and str(row[2]).strip() == str(notes).strip():
+                return True
+            try:
+                t1 = datetime.strptime(str(date_str)[:19], "%Y-%m-%d %H:%M:%S")
+                t2 = datetime.strptime(str(row[1])[:19], "%Y-%m-%d %H:%M:%S")
+                if abs((t1 - t2).total_seconds()) < 600:
+                    return True
+            except Exception:
+                pass
+    except Exception:
+        pass
+
+    return False
+
 def db_insert_expense(date, user, category, amount, mode, merchant, notes):
-    """Inserts a new expense to Supabase Cloud and mirrors to local SQLite."""
+    """Inserts a new expense to Supabase Cloud and mirrors to local SQLite with deduplication."""
+    if is_duplicate_expense(date, user, amount, notes):
+        return True
+
     cloud_saved = False
     if SUPABASE_URL and SUPABASE_KEY:
         try:
@@ -446,6 +503,52 @@ def db_insert_expense(date, user, category, amount, mode, merchant, notes):
     except Exception:
         pass
     return cloud_saved
+
+def db_clean_duplicate_expenses():
+    """Finds and eliminates duplicate expenses in Supabase and SQLite, retaining exactly one record."""
+    deleted_count = 0
+    df = db_get_expenses()
+    if df.empty or len(df) <= 1:
+        return 0
+
+    df_sorted = df.sort_values(by="id", ascending=True).copy()
+    seen = []
+    ids_to_delete = []
+
+    for _, row in df_sorted.iterrows():
+        r_id = row['id']
+        r_user = str(row['user']).strip()
+        r_amt = float(row['amount'])
+        r_date = str(row['date']).strip()
+        r_notes = str(row.get('notes', '')).strip()
+
+        is_dup = False
+        for s_id, s_user, s_amt, s_date, s_notes in seen:
+            if s_user == r_user and abs(s_amt - r_amt) < 0.01:
+                # 1. Exact notes match
+                if r_notes and s_notes and r_notes == s_notes:
+                    is_dup = True
+                    break
+                # 2. Within 10 minutes time window
+                try:
+                    t1 = datetime.strptime(r_date[:19], "%Y-%m-%d %H:%M:%S")
+                    t2 = datetime.strptime(s_date[:19], "%Y-%m-%d %H:%M:%S")
+                    if abs((t1 - t2).total_seconds()) < 600:
+                        is_dup = True
+                        break
+                except Exception:
+                    pass
+
+        if is_dup:
+            ids_to_delete.append(r_id)
+        else:
+            seen.append((r_id, r_user, r_amt, r_date, r_notes))
+
+    for dup_id in ids_to_delete:
+        db_delete_expense(dup_id)
+        deleted_count += 1
+
+    return deleted_count
 
 def db_delete_expense(expense_id):
     """Deletes an expense from Supabase Cloud and local SQLite."""
@@ -584,9 +687,19 @@ def db_delete_alert(alert_id):
         pass
 
 def db_insert_batch_expenses(batch_records):
-    """Batch inserts records into Supabase and SQLite."""
+    """Batch inserts records into Supabase and SQLite with deduplication."""
     if not batch_records:
         return
+    
+    # Filter out duplicates against existing records
+    filtered_records = []
+    for r in batch_records:
+        if not is_duplicate_expense(r[0], r[1], r[3], r[6]):
+            filtered_records.append(r)
+            
+    if not filtered_records:
+        return
+
     if SUPABASE_URL and SUPABASE_KEY:
         try:
             payload = [
@@ -599,7 +712,7 @@ def db_insert_batch_expenses(batch_records):
                     "merchant": str(r[5]),
                     "notes": str(r[6])
                 }
-                for r in batch_records
+                for r in filtered_records
             ]
             for i in range(0, len(payload), 100):
                 requests.post(f"{SUPABASE_URL}/rest/v1/expenses", headers=get_supabase_headers(), json=payload[i:i+100], timeout=10)
@@ -607,7 +720,7 @@ def db_insert_batch_expenses(batch_records):
             pass
     try:
         conn = get_db()
-        conn.executemany("INSERT INTO expenses (date, user, category, amount, mode, merchant, notes) VALUES (?, ?, ?, ?, ?, ?, ?)", batch_records)
+        conn.executemany("INSERT INTO expenses (date, user, category, amount, mode, merchant, notes) VALUES (?, ?, ?, ?, ?, ?, ?)", filtered_records)
         conn.commit()
         conn.close()
     except Exception:
@@ -928,7 +1041,17 @@ with tab_dash:
             sum_disp["தொகை (₹)"] = sum_disp["தொகை (₹)"].apply(lambda x: f"₹{x:,.2f}")
             st.dataframe(sum_disp, use_container_width=True, hide_index=True)
             
-        st.markdown('<div class="section-title">📋 சமீபத்திய செலவுகள் (நீக்க/சரிபார்க்க)</div>', unsafe_allow_html=True)
+        r_head_col1, r_head_col2 = st.columns([3.0, 2.2])
+        with r_head_col1:
+            st.markdown('<div class="section-title">📋 சமீபத்திய செலவுகள்</div>', unsafe_allow_html=True)
+        with r_head_col2:
+            if st.button("🧹 நகல்களை நீக்கு", key="clean_dup_dash", help="ஒரே மாதிரியான 2/3 முறை பதிவான செலவுகளை நீக்கு", use_container_width=True):
+                del_count = db_clean_duplicate_expenses()
+                if del_count > 0:
+                    st.success(f"✅ {del_count} நகல் செலவுகள் நீக்கப்பட்டன!")
+                else:
+                    st.info("✅ நகல் செலவுகள் எதுவும் இல்லை!")
+                st.rerun()
         recent_df = df.sort_values(by="id", ascending=False)
         for _, r in recent_df.head(15).iterrows():
             d_col1, d_col2 = st.columns([4.2, 1.2])
@@ -995,6 +1118,34 @@ with tab_entry:
     if q_r2_c2.button("🌾 மளிகை ₹500", use_container_width=True):
         add_quick_expense("மளிகை & உணவு", 500.0, "மளிகைக் கடை")
         
+    st.write("")
+
+    with st.expander("⚡ Paytm செப்டம்பர் விடுபட்ட செலவுகள் (1-Click Sync)", expanded=False):
+        st.markdown("""
+        <div style="font-size:13px; color:#334155; margin-bottom:8px;">
+            வங்கி SMS வராமல் Paytm-ல் விடுபட்ட செப்டம்பர் செலவுகள் (உங்கள் பேமெண்ட் வரலாற்றின்படி):
+        </div>
+        """, unsafe_allow_html=True)
+        st.markdown("""
+        * 🏨 **Hotel Annalakshmi Catering Services**: ₹345 *(மளிகை & உணவு)*
+        * 🍞 **Krishna Bakery**: ₹170 *(டீ & சிற்றுண்டி)*
+        * ⛽ **Nishanth Enterprises**: ₹800 *(வாகனம் & Fuel)*
+        * 🛒 **Maheshwari Maligai**: ₹70 *(மளிகை & உணவு)*
+        """)
+        if st.button("➕ இந்த 4 விடுபட்ட Paytm செலவுகளையும் உடனே சேர் (மொத்தம்: ₹1,385)", key="add_missing_paytm", use_container_width=True):
+            missing_paytm_items = [
+                ("2026-09-19 19:05:00", "👤 ராஜ்குமார் (கணவர்)", "மளிகை & உணவு", 345.0, "Paytm UPI", "Hotel Annalakshmi Catering Services", "Paytm: Paid ₹345 to Hotel Annalakshmi Catering Services"),
+                ("2026-09-18 15:38:00", "👤 ராஜ்குமார் (கணவர்)", "டீ & சிற்றுண்டி", 170.0, "Paytm UPI", "Krishna Bakery", "Paytm: Paid ₹170 to Krishna Bakery"),
+                ("2026-09-18 11:22:00", "👤 ராஜ்குமார் (கணவர்)", "வாகனம் & Fuel", 800.0, "Paytm UPI", "Nishanth Enterprises", "Paytm: Paid ₹800 to Nishanth Enterprises"),
+                ("2026-09-17 10:15:00", "👤 ராஜ்குமார் (கணவர்)", "மளிகை & உணவு", 70.0, "Paytm UPI", "Maheshwari Maligai", "Paytm: Paid ₹70 to Maheshwari Maligai")
+            ]
+            added_count = 0
+            for itm in missing_paytm_items:
+                if db_insert_expense(itm[0], itm[1], itm[2], itm[3], itm[4], itm[5], itm[6]):
+                    added_count += 1
+            st.success(f"✅ விடுபட்ட {added_count} Paytm செலவுகளும் கணக்கில் சேர்க்கப்பட்டன!")
+            st.rerun()
+
     st.write("")
     
     st.markdown("""
@@ -1281,6 +1432,51 @@ with tab_upload:
                 st.rerun()
             except Exception as e:
                 st.error(f"பிழை: {e}")
+
+    st.write("")
+    st.markdown('<div class="section-title">📱 Paytm / UPI / SMS உரை மொத்தப் பதிவு</div>', unsafe_allow_html=True)
+    st.caption("Paytm அல்லது UPI வரலாற்றை காப்பி செய்து இங்கே பேஸ்ட் செய்தால் தானாகப் பிரித்தெடுத்துப் பதிவு செய்யும்.")
+    bulk_txt = st.text_area(
+        "Paytm / SMS உரைகள் (வரிக்கு ஒன்றாக அல்லது பாராவாக):",
+        placeholder="Paid ₹345 to Hotel Annalakshmi\nPaid ₹170 to Krishna Bakery\nPaid ₹800 to Nishanth Enterprises...",
+        height=120,
+        key="bulk_paytm_txt"
+    )
+    if st.button("🚀 மொத்தமாகப் பகுப்பாய்வு செய்து பதிவு செய்", key="btn_bulk_parse", use_container_width=True):
+        if bulk_txt.strip():
+            lines = [line.strip() for line in bulk_txt.strip().split("\n") if line.strip()]
+            records = []
+            now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            for line in lines:
+                amt = extract_amount_regex(line)
+                if amt > 0:
+                    merchant = "UPI / Paytm"
+                    m_match = re.search(r'(?i)(?:to|at)\s+([A-Za-z0-9\s&.\'-]+?)(?:\s+successful|\s+from|\s+upi|\.|\n|$)', line)
+                    if m_match:
+                        cand = m_match.group(1).strip()
+                        if len(cand) >= 3:
+                            merchant = cand
+                    cat = "இதர செலவுகள்"
+                    line_low = line.lower()
+                    if any(w in line_low for w in ["hotel", "restaurant", "catering", "cater", "bhavan", "mess", "maligai", "mart", "grocery", "milk", "vegetable"]):
+                        cat = "மளிகை & உணவு"
+                    elif any(w in line_low for w in ["tea", "coffee", "bakery", "snack", "sweets", "juice"]):
+                        cat = "டீ & சிற்றுண்டி"
+                    elif any(w in line_low for w in ["petrol", "fuel", "diesel", "iocl", "hpcl", "bpcl", "fastag", "traders"]):
+                        cat = "வாகனம் & Fuel"
+                    elif any(w in line_low for w in ["medical", "pharmacy", "clinic", "hospital"]):
+                        cat = "மருத்துவம்"
+                    elif any(w in line_low for w in ["loan", "emi"]):
+                        cat = "கடன்கள் & EMI"
+                    elif any(w in line_low for w in ["eb bill", "electricity"]):
+                        cat = "மின்சாரக் கட்டணம்"
+                    records.append((now_str, active_user, cat, amt, "Paytm / UPI Bulk", merchant, line))
+            if records:
+                db_insert_batch_expenses(records)
+                st.success(f"🎉 {len(records)} செலவுகள் வெற்றிகரமாக சேர்க்கப்பட்டன!")
+                st.rerun()
+            else:
+                st.warning("உரையில் செலவுத் தொகைகள் எதுவும் கண்டறியப்படவில்லை.")
 
 # ==================== 6. OTHER ALERTS ====================
 with tab_alerts:

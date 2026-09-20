@@ -2,14 +2,18 @@ package com.rajkumar.kasuai
 
 import android.Manifest
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.provider.Settings
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import android.widget.Button
 import android.widget.EditText
 import android.widget.RadioGroup
+import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
@@ -33,6 +37,7 @@ class MainActivity : AppCompatActivity() {
         } else {
             Toast.makeText(this, "⚠️ தானியங்கி SMS பதிவிற்கு அனுமதி தேவை.", Toast.LENGTH_LONG).show()
         }
+        checkNotificationListenerPermission()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -57,6 +62,30 @@ class MainActivity : AppCompatActivity() {
         loadDashboard()
     }
 
+    override fun onResume() {
+        super.onResume()
+        // Refresh check when returning from system settings
+    }
+
+    private fun isNotificationListenerEnabled(): Boolean {
+        val pkgName = packageName
+        val flat = Settings.Secure.getString(contentResolver, "enabled_notification_listeners")
+        return flat != null && flat.contains(pkgName)
+    }
+
+    private fun checkNotificationListenerPermission() {
+        if (!isNotificationListenerEnabled()) {
+            AlertDialog.Builder(this)
+                .setTitle("🔔 Paytm & UPI தானியங்கி கண்காணிப்பு")
+                .setMessage("Paytm, Google Pay, PhonePe ஆகியவற்றில் செலுத்தப்படும் செலவுகளுக்கு SMS வராவிட்டாலும், KasuAI தானாகக் கணக்கில் சேர்க்க Notification Access அனுமதி தேவை.\n\nஇப்போது இயக்கவா?")
+                .setPositiveButton("இயக்கு (Enable)") { _, _ ->
+                    startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS))
+                }
+                .setNegativeButton("பிறகு", null)
+                .show()
+        }
+    }
+
     private fun checkAndRequestPermissions() {
         val permissionsToRequest = mutableListOf(
             Manifest.permission.RECEIVE_SMS,
@@ -73,6 +102,8 @@ class MainActivity : AppCompatActivity() {
 
         if (needed.isNotEmpty()) {
             permissionLauncher.launch(needed.toTypedArray())
+        } else {
+            checkNotificationListenerPermission()
         }
     }
 
@@ -106,6 +137,21 @@ class MainActivity : AppCompatActivity() {
         val dialogView = layoutInflater.inflate(R.layout.dialog_settings, null)
         val inputUrl = dialogView.findViewById<EditText>(R.id.editServerUrl)
         val radioGroup = dialogView.findViewById<RadioGroup>(R.id.radioGroupUser)
+        val textNotifyStatus = dialogView.findViewById<TextView>(R.id.textNotificationStatus)
+        val btnNotification = dialogView.findViewById<Button>(R.id.btnNotificationAccess)
+
+        val isListenerActive = isNotificationListenerEnabled()
+        if (isListenerActive) {
+            textNotifyStatus.text = "🟢 செயலில் உள்ளது (Active) — Paytm & UPI செலவுகள் தானாகப் பதியப்படும்"
+            textNotifyStatus.setTextColor(ContextCompat.getColor(this, android.R.color.holo_green_dark))
+        } else {
+            textNotifyStatus.text = "🔴 அனுமதிக்கப்படவில்லை (Disabled) — Paytm செலவுகளை எடுக்க அனுமதியை இயக்கவும்"
+            textNotifyStatus.setTextColor(ContextCompat.getColor(this, android.R.color.holo_red_dark))
+        }
+
+        btnNotification.setOnClickListener {
+            startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS))
+        }
 
         inputUrl.setText(currentUrl)
         if (currentUser.contains("மனைவி")) {

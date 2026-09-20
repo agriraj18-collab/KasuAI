@@ -14,7 +14,7 @@ object SmsParser {
     private val BALANCE_REGEX = Regex("(?i)(?:avl\\s*bal|avbl\\s*bal|balance|bal|acct\\s*bal)\\s*:?\\s*(?:rs\\.?|inr|₹)?\\s*[\\d,]+(?:\\.\\d{1,2})?")
     private val AMOUNT_PATTERNS = listOf(
         Regex("(?i)(?:rs\\.?|inr|₹)\\s*([\\d,]+(?:\\.\\d{1,2})?)"),
-        Regex("(?i)(?:debited\\s+by|paid|spent|withdrawn)\\s*(?:rs\\.?|inr|₹)?\\s*([\\d,]+(?:\\.\\d{1,2})?)"),
+        Regex("(?i)(?:debited\\s+by|debited\\s+for|paid|spent|withdrawn)\\s*(?:rs\\.?|inr|₹)?\\s*([\\d,]+(?:\\.\\d{1,2})?)"),
         Regex("(?i)([\\d,]+(?:\\.\\d{1,2})?)\\s*(?:rs\\.?|inr|₹)")
     )
     private val DEBIT_WORDS = listOf("debited", "spent", "paid", "recharge of", "withdrawn", "transferred", "sent rs", "deducted", "vpa")
@@ -62,22 +62,12 @@ object SmsParser {
         val merchantMatch = Regex("(?i)(?:to|at|vpa)\\s+([A-Za-z0-9\\s&]+?)(?:\\s+on|\\s+ref|\\s+upi|\\s+a/c|\\.|\n|$)").find(sms)
         if (merchantMatch != null) {
             val mName = merchantMatch.groupValues[1].trim()
-            if (mName.length in 3..35) {
+            if (mName.length in 3..40) {
                 merchant = mName
             }
         }
 
-        // Map Category to Tamil standard categories
-        val category = when {
-            listOf("petrol", "fuel", "diesel", "iocl", "hpcl", "bpcl", "fastag").any { lower.contains(it) } -> "வாகனம் & Fuel"
-            listOf("lntfin", "loan", "emi", "bajaj", "muthoot").any { lower.contains(it) } -> "கடன்கள் & EMI"
-            listOf("tangedco", "electricity", "eb bill").any { lower.contains(it) } -> "மின்சாரக் கட்டணம்"
-            listOf("tea", "bakery", "snack", "coffee").any { lower.contains(it) } -> "டீ & சிற்றுண்டி"
-            listOf("mart", "grocery", "vegetable", "supermarket", "milk", "kirana").any { lower.contains(it) } -> "மளிகை & உணவு"
-            listOf("medical", "pharmacy", "hospital", "apollo", "clinic").any { lower.contains(it) } -> "மருத்துவம்"
-            listOf("fertilizer", "tractor", "seeds", "agri").any { lower.contains(it) } -> "விவசாயச் செலவு"
-            else -> "இதர செலவுகள்"
-        }
+        val category = categorize(merchant + " " + sms)
 
         return ParsedSms(
             isExpense = true,
@@ -86,5 +76,19 @@ object SmsParser {
             merchant = merchant,
             explanation = "$category - ₹$amt"
         )
+    }
+
+    fun categorize(text: String): String {
+        val lower = text.lowercase(Locale.ROOT)
+        return when {
+            listOf("tea", "coffee", "bakery", "snack", "sweets", "juice", "cafe", "biscuit").any { lower.contains(it) } -> "டீ & சிற்றுண்டி"
+            listOf("hotel", "restaurant", "catering", "cater", "bhavan", "mess", "swiggy", "zomato", "maligai", "mart", "grocery", "vegetable", "supermarket", "milk", "kirana", "rice", "store").any { lower.contains(it) } -> "மளிகை & உணவு"
+            listOf("petrol", "fuel", "diesel", "iocl", "hpcl", "bpcl", "fastag", "shell", "traders", "oil", "service", "auto", "garage", "puncture", "toll").any { lower.contains(it) } -> "வாகனம் & Fuel"
+            listOf("medical", "pharmacy", "hospital", "apollo", "clinic", "health", "pharma", "lab", "medicals", "doctor").any { lower.contains(it) } -> "மருத்துவம்"
+            listOf("lntfin", "loan", "emi", "bajaj", "muthoot", "finance", "credit card", "hdfc bank loan", "chola", "shriram", "equitas").any { lower.contains(it) } -> "கடன்கள் & EMI"
+            listOf("tangedco", "electricity", "eb bill", "water", "gas", "cylinder", "indane", "hp gas", "bharat gas").any { lower.contains(it) } -> "மின்சாரக் கட்டணம்"
+            listOf("fertilizer", "tractor", "seeds", "agri", "pesticide", "harvest", "diesel farm").any { lower.contains(it) } -> "விவசாயச் செலவு"
+            else -> "இதர செலவுகள்"
+        }
     }
 }
