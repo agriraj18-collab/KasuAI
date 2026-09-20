@@ -37,13 +37,18 @@ class PaymentNotificationListener : NotificationListenerService() {
         private val AMOUNT_PATTERNS = listOf(
             Regex("(?i)(?:paid\\s+|payment\\s+of\\s+|sent\\s+|debited\\s+(?:for\\s+)?)(?:rs\\.?|inr|₹)?\\s*([\\d,]+(?:\\.\\d{1,2})?)"),
             Regex("(?i)(?:rs\\.?|inr|₹)\\s*([\\d,]+(?:\\.\\d{1,2})?)"),
-            Regex("(?i)([\\d,]+(?:\\.\\d{1,2})?)\\s*(?:rs\\.?|inr|₹)")
+            Regex("(?i)([\\d,]+(?:\\.\\d{1,2})?)\\s*(?:rs\\.?|inr|₹)"),
+            Regex("(?:-\\s*)?(?:rs\\.?|inr|₹)?\\s*([\\d,]+(?:\\.\\d{1,2})?)")
         )
 
-        private val IGNORE_KEYWORDS = listOf(
-            "otp", "login", "security code", "cashback received",
-            "promotional", "discount", "offer", "recharge successful",
-            "received rs", "credited", "payment received"
+        // Only ignore true non-financial notifications (DO NOT ignore 'offer' or 'discount' because Paytm appends marketing text to receipts)
+        private val STRICT_IGNORE = listOf(
+            "login otp", "signin otp", "verification code", "security code",
+            "bill due", "bill generated", "statement available", "auto-debit scheduled"
+        )
+
+        private val CREDIT_KEYWORDS = listOf(
+            "received rs", "credited to", "payment received from", "money added to wallet", "cashback credited"
         )
 
         private var lastProcessedHash: Int = 0
@@ -66,24 +71,23 @@ class PaymentNotificationListener : NotificationListenerService() {
         val title = extras.getCharSequence(Notification.EXTRA_TITLE)?.toString() ?: ""
         val text = extras.getCharSequence(Notification.EXTRA_TEXT)?.toString() ?: ""
         val bigText = extras.getCharSequence(Notification.EXTRA_BIG_TEXT)?.toString() ?: ""
-        val fullContent = "$title $text $bigText".trim()
+        val fullContent = "$title | $text | $bigText".trim()
 
         if (fullContent.isBlank()) return
 
         val lower = fullContent.lowercase(Locale.ROOT)
 
-        // Ignore OTP, incoming payments (credits), and promotional ads
-        if (IGNORE_KEYWORDS.any { lower.contains(it) }) {
+        // Ignore true OTPs and pure login security alerts
+        if (STRICT_IGNORE.any { lower.contains(it) }) {
             return
         }
 
-        // Must indicate an outgoing payment or debit
-        val isDebitOrPaid = listOf("paid", "payment", "sent", "debited", "spent", "transferred").any { lower.contains(it) }
-        if (!isDebitOrPaid) {
+        // Ignore incoming credits (e.g. money received)
+        if (CREDIT_KEYWORDS.any { lower.contains(it) }) {
             return
         }
 
-        // Prevent repeated processing within 10 seconds
+        // Prevent repeated processing of identical notification within 10 seconds
         val now = System.currentTimeMillis()
         val contentHash = fullContent.hashCode()
         if (contentHash == lastProcessedHash && (now - lastProcessedTime) < 10_000L) {
@@ -109,23 +113,38 @@ class PaymentNotificationListener : NotificationListenerService() {
         }
 
         if (amount <= 0) {
+            // Log unparsed alert for debugging transparency
+            CoroutineScope(Dispatchers.IO).launch {
+                NetworkClient.sendSmsToServer(applicationContext, "$appName (Notification)", fullContent)
+            }
             return
         }
 
         // Parse Merchant / Payee
         var merchant = "கடை / UPI"
-        val merchantMatch = Regex("(?i)(?:to|at)\\s+([A-Za-z0-9\\s&.'-]+?)(?:\\s+successful|\\s+using|\\s+from|\\s+upi|\\s+on|\\.|\n|$)").find(fullContent)
-        if (merchantMatch != null) {
-            val candidate = merchantMatch.groupValues[1].trim()
-            if (candidate.length in 3..45) {
-                merchant = candidate
-            }
-        } else if (title.contains(" to ", ignoreCase = true)) {
-            val parts = title.split(Regex("(?i)\\sto\\s"))
-            if (parts.size >= 2) {
-                val candidate = parts[1].trim()
-                if (candidate.length in 3..45) {
-                    merchant = candidate
+
+        // 1. Check if title itself is the payee name (e.g., "Manoharan Ponnusamy")
+        val cleanTitle = title.trim()
+        val lowerTitle = cleanTitle.lowercase(Locale.ROOT)
+        val isGenericTitle = listOf("paytm", "payment", "successful", "debited", "paid", "upi", "alert", "transaction", "reward", "cred", "google pay", "phonepe").any { lowerTitle.contains(it) }
+
+        if (cleanTitle.length in 3..40 && !isGenericTitle) {
+            merchant = cleanTitle
+        } else {
+            // 2. Extract from "paid to <merchant>", "to <merchant>", "on <merchant>"
+            val patterns = listOf(
+                Regex("(?i)(?:paid\\s+to|payment\\s+to|sent\\s+to|purchase\\s+on)\\s+([A-Za-z0-9\\s&.'-]+?)(?:\\s+was|\\s+is|\\s+successful|\\s+using|\\s+from|\\s+via|\\s+upi|\\.|\||$)"),
+                Regex("(?i)(?:to|at)\\s+([A-Za-z0-9\\s&.'-]+?)(?:\\s+successful|\\s+using|\\s+from|\\s+via|\\s+upi|\\.|\||$)")
+            )
+            for (p in patterns) {
+                val mMatch = p.find(fullContent)
+                if (mMatch != null) {
+                    val candidate = mMatch.groupValues[1].trim()
+                    // Avoid false positives like "claim your reward"
+                    if (candidate.length in 3..40 && !candidate.contains("claim", ignoreCase = true) && !candidate.contains("reward", ignoreCase = true)) {
+                        merchant = candidate
+                        break
+                    }
                 }
             }
         }
