@@ -133,8 +133,8 @@ class PaymentNotificationListener : NotificationListenerService() {
         } else {
             // 2. Extract from "paid to <merchant>", "to <merchant>", "on <merchant>"
             val patterns = listOf(
-                Regex("(?i)(?:paid\\s+to|payment\\s+to|sent\\s+to|purchase\\s+on)\\s+([A-Za-z0-9\\s&.'-]+?)(?:\\s+was|\\s+is|\\s+successful|\\s+using|\\s+from|\\s+via|\\s+upi|\\.|\||$)"),
-                Regex("(?i)(?:to|at)\\s+([A-Za-z0-9\\s&.'-]+?)(?:\\s+successful|\\s+using|\\s+from|\\s+via|\\s+upi|\\.|\||$)")
+                Regex("(?i)(?:paid\\s+to|payment\\s+to|sent\\s+to|purchase\\s+on)\\s+([A-Za-z0-9\\s&.'-]+?)(?:\\s+was|\\s+is|\\s+successful|\\s+using|\\s+from|\\s+via|\\s+upi|\\.|\\||$)"),
+                Regex("(?i)(?:to|at)\\s+([A-Za-z0-9\\s&.'-]+?)(?:\\s+successful|\\s+using|\\s+from|\\s+via|\\s+upi|\\.|\\||$)")
             )
             for (p in patterns) {
                 val mMatch = p.find(fullContent)
