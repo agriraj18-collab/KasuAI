@@ -22,16 +22,17 @@ object SmsParser {
     fun parse(sms: String): ParsedSms {
         val lower = sms.lowercase(Locale.ROOT)
         val isDebit = DEBIT_WORDS.any { lower.contains(it) }
-        val isOtpOrAlert = lower.contains("otp") || lower.contains("mandate") || lower.contains("statement") || (!isDebit && lower.contains("credited"))
+        val isPromo = listOf("loan", "personal loan", "pre-approved", "ஆஃபர்", "offer", "brokerage", "reward", "win", "lottery", "cashback offer", "unlocked", "apply now").any { lower.contains(it) } && !lower.contains("debited") && !lower.contains("paid to")
+        val isOtpOrAlert = isPromo || lower.contains("otp") || lower.contains("mandate") || lower.contains("statement") || (!isDebit && lower.contains("credited"))
 
         if (isOtpOrAlert || !isDebit) {
-            val cat = if (lower.contains("credited")) "வரவு (Credit)" else "வங்கி அறிவிப்பு / OTP"
+            val cat = if (lower.contains("credited")) "வரவு (Credit)" else if (isPromo) "விளம்பரம் / ஆஃபர்" else "வங்கி அறிவிப்பு / OTP"
             return ParsedSms(
                 isExpense = false,
                 amount = 0.0,
                 category = cat,
                 merchant = "SMS",
-                explanation = "தகவல் அறிவிப்பு செய்தி"
+                explanation = "தகவல் அறிவிப்பு / விளம்பரச் செய்தி"
             )
         }
 

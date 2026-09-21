@@ -41,7 +41,26 @@ class PaymentNotificationListener : NotificationListenerService() {
             Regex("(?:-\\s*)?(?:rs\\.?|inr|₹)?\\s*([\\d,]+(?:\\.\\d{1,2})?)")
         )
 
-        // Only ignore true non-financial notifications (DO NOT ignore 'offer' or 'discount' because Paytm appends marketing text to receipts)
+        // Strict blacklist of promotional, loan, and marketing notifications from fintech apps
+        private val PROMOTIONAL_SPAM_KEYWORDS = listOf(
+            "loan", "personal loan", "ஆஃபர்", "offer", "pre-approved", "credit limit", "emi offer",
+            "brokerage", "gold", "daily savings", "saved daily", "invest", "mutual fund", "reward",
+            "cashback offer", "discount", "voucher", "spin and win", "lottery",
+            "apply now", "unlocked for you", "unlocked", "claim", "free", "congratulations",
+            "interest rate", "per month", "instant funds", "flat discount", "kyc", "activate now",
+            "recharge offer", "earn", "save more", "zero balance", "bumper"
+        )
+
+        // Only notifications with explicit debit / payment confirmation phrases will be treated as expenses
+        private val STRICT_DEBIT_CONFIRMATIONS = listOf(
+            "paid rs", "paid inr", "paid ₹", "paid to",
+            "payment of rs", "payment of inr", "payment of ₹", "payment to",
+            "sent rs", "sent inr", "sent ₹", "sent to",
+            "debited by", "debited for", "debited from",
+            "successfully paid", "purchase on", "transferred to"
+        )
+
+        // Ignore true non-financial notifications
         private val STRICT_IGNORE = listOf(
             "login otp", "signin otp", "verification code", "security code",
             "bill due", "bill generated", "statement available", "auto-debit scheduled"
@@ -77,13 +96,26 @@ class PaymentNotificationListener : NotificationListenerService() {
 
         val lower = fullContent.lowercase(Locale.ROOT)
 
-        // Ignore true OTPs and pure login security alerts
+        // 1. Immediately drop all marketing spam, loan ads, gold schemes, brokerage promos
+        if (PROMOTIONAL_SPAM_KEYWORDS.any { lower.contains(it) }) {
+            Log.d(TAG, "[$appName] Ignored marketing promotion / loan ad: $fullContent")
+            return
+        }
+
+        // 2. Ignore true OTPs and login security alerts
         if (STRICT_IGNORE.any { lower.contains(it) }) {
             return
         }
 
-        // Ignore incoming credits (e.g. money received)
+        // 3. Ignore incoming credits (money received)
         if (CREDIT_KEYWORDS.any { lower.contains(it) }) {
+            return
+        }
+
+        // 4. MUST have an explicit debit confirmation phrase (e.g. "Paid ₹", "Sent ₹", "Debited")
+        val hasDebitConfirmation = STRICT_DEBIT_CONFIRMATIONS.any { lower.contains(it) }
+        if (!hasDebitConfirmation) {
+            Log.d(TAG, "[$appName] Dropped notification without debit confirmation: $fullContent")
             return
         }
 

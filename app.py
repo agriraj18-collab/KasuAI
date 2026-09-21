@@ -356,13 +356,28 @@ st.markdown("""
         gap: 0.35rem !important;
     }
 
-    /* C. Columns gap */
-    [data-testid="stColumns"] {
-        gap: 0.4rem !important;
+    /* C. Columns gap & Horizontal row enforcement on mobile */
+    [data-testid="stColumns"], [data-testid="stHorizontalBlock"] {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        align-items: center !important;
+        gap: 0.35rem !important;
     }
     [data-testid="column"] {
-        gap: 0 !important;
+        min-width: 0 !important;
         padding: 0 !important;
+    }
+    @media (max-width: 640px) {
+        [data-testid="stColumns"] > [data-testid="column"],
+        [data-testid="stHorizontalBlock"] > [data-testid="column"] {
+            width: auto !important;
+            flex: 1 1 auto !important;
+        }
+        [data-testid="stColumns"] > [data-testid="column"]:last-child,
+        [data-testid="stHorizontalBlock"] > [data-testid="column"]:last-child {
+            flex: 0 0 auto !important;
+        }
     }
 
     /* D. Form inputs — no bottom margin */
