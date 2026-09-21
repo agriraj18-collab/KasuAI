@@ -1389,15 +1389,21 @@ with tab_entry:
             else:
                 cat = result["category"] if result else "Info Alert"
                 explanation = result["explanation"] if result else "Information message"
-                db_insert_alert(
-                    datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                    "SMS",
-                    cat,
-                    explanation,
-                    sms_txt
-                )
-                st.info(f"🔔 **{cat}:** {explanation}")
-                st.rerun()
+                sms_lower = sms_txt.lower()
+                is_otp = "otp" in sms_lower or "one-time password" in sms_lower or "verification code" in sms_lower or "otp" in cat.lower()
+
+                if is_otp:
+                    st.info("🔐 **பாதுகாப்பு எச்சரிக்கை (OTP):** இது ஒரு முறை கடவுச்சொல் (OTP) என்பதால், தனியுரிமை விதிகளின்படி ஆப்-ல் பதியப்படாது.")
+                else:
+                    db_insert_alert(
+                        datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                        "SMS",
+                        cat,
+                        explanation,
+                        sms_txt
+                    )
+                    st.info(f"🔔 **{cat}:** {explanation}")
+                    st.rerun()
         else:
             st.warning("Please paste an SMS message first!")
     st.markdown("</div>", unsafe_allow_html=True)

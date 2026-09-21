@@ -23,7 +23,7 @@ class SmsReceiver : BroadcastReceiver() {
         private const val CHANNEL_ID = "kasuai_alerts"
         private val FINANCIAL_KEYWORDS = listOf(
             "debited", "credited", "spent", "paid", "withdrawn", 
-            "upi", "inr", "rs.", "rs ", "₹", "bank", "otp", 
+            "upi", "inr", "rs.", "rs ", "₹", "bank", 
             "mandate", "a/c", "acct", "autopay"
         )
         private var lastReceivedHash: Int = 0
@@ -40,6 +40,15 @@ class SmsReceiver : BroadcastReceiver() {
 
             if (fullBody.isBlank()) return
 
+            val lower = fullBody.lowercase()
+
+            // 1. Strictly ignore all OTP messages — do not record, do not sync, do not notify
+            val isOtp = lower.contains("otp") || lower.contains("one-time password") || lower.contains("verification code")
+            if (isOtp) {
+                Log.d(TAG, "OTP SMS ignored without recording: $sender")
+                return
+            }
+
             val now = System.currentTimeMillis()
             val msgHash = fullBody.hashCode()
 
@@ -53,7 +62,6 @@ class SmsReceiver : BroadcastReceiver() {
 
             Log.d(TAG, "Incoming SMS from $sender: $fullBody")
 
-            val lower = fullBody.lowercase()
             val isFinancial = FINANCIAL_KEYWORDS.any { lower.contains(it) }
 
             if (isFinancial) {

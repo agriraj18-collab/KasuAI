@@ -167,8 +167,8 @@ object NetworkClient {
 
         val parsed = SmsParser.parse(message)
 
-        return if (parsed.isExpense && parsed.amount > 0) {
-            sendExpense(
+        if (parsed.isExpense && parsed.amount > 0) {
+            return sendExpense(
                 context = context,
                 user = activeUser,
                 category = parsed.category,
@@ -178,6 +178,13 @@ object NetworkClient {
                 notes = message
             )
         } else {
+            // Strictly do NOT record OTP messages anywhere in the cloud
+            val lower = message.lowercase(Locale.ROOT)
+            if (lower.contains("otp") || lower.contains("one-time password") || lower.contains("verification code")) {
+                Log.d(TAG, "OTP SMS dropped without recording to database.")
+                return true
+            }
+
             val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
             val currentTimestamp = sdf.format(Date())
             val alertArray = JSONArray().apply {
