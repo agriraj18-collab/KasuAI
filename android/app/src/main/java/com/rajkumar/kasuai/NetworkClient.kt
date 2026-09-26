@@ -196,7 +196,7 @@ object NetworkClient {
                     put("raw_text", message)
                 })
             }
-            postToSupabase("other_alerts", alertArray.toString())
+            return postToSupabase("other_alerts", alertArray.toString())
         }
     }
 
